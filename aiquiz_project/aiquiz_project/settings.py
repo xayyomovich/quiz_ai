@@ -114,3 +114,23 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# BOT_USERNAME = "quizes_ai_bot"
+
+
+# Add these to your settings.py
+
+# Gemini API Configuration
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+
+# Bot Configuration
+BOT_USERNAME = os.getenv("BOT_USERNAME", "YourBotUsername")  # without @
+
+# LLM Configuration - Two Model Strategy
+GEMINI_CONFIRMATION_MODEL = "gemini-2.5-flash-lite"  # Cheap & fast for parsing
+GEMINI_GENERATION_MODEL = "gemini-2.5-flash"       # Quality for test generation
+
+LLM_PROVIDER = "gemini"
+LLM_MAX_RETRIES = 2  # Retry failed generations
+LLM_CONFIRMATION_TIMEOUT = 10  # seconds
+LLM_GENERATION_TIMEOUT = 30  # seconds
