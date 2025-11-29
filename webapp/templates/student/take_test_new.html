@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ test.title }} - Take Test{% endblock %}
+
+{% block content %}
+<div class="flex flex-col lg:flex-row gap-4" x-data="testTaking()">
+    <!-- Main Test Area (75% on desktop) -->
+    <div class="flex-1 lg:w-3/4">
+        <!-- Test Header -->
+        <div class="card bg-gradient-to-r from-primary to-secondary text-white shadow-xl mb-4">
+            <div class="card-body py-4">
+                <h1 class="text-2xl font-bold">{{ test.title }}</h1>
+                <div class="flex flex-wrap gap-2 mt-2">
+                    <span class="badge badge-lg">{{ questions|length }} Questions</span>
+                    <span class="badge badge-lg">{{ total_points }} Points</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Questions Form -->
+        <form @submit.prevent="submitTest" id="test-form">
+            {% csrf_token %}
+
+            <div class="space-y-4">
+                {% for question in questions %}
+                <div class="card bg-base-100 shadow-lg">
+                    <div class="card-body">
+                        <!-- Question Header -->
+                        <div class="flex justify-between items-start mb-3">
+                            <h3 class="font-bold text-lg">
+                                <span class="badge badge-primary mr-2">Q{{ forloop.counter }}</span>
+                                {{ question.question_text }}
+                            </h3>
+                            <span class="badge badge-outline">{{ question.points }} pt</span>
+                        </div>
+
+                        <!-- Options -->
+                        <div class="space-y-2"
+                             :class="{ 'opacity-50 pointer-events-none': isSubmitted }">
+                            {% for option in question.options %}
+                            <label class="flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer hover:bg-base-200 transition"
+                                   :class="{ 'bg-base-200 border-primary': selectedAnswers[{{ question.id }}] === {{ forloop.counter0 }} }">
+                                <input type="radio"
+                                       name="question_{{ question.id }}"
+                                       value="{{ forloop.counter0 }}"
+                                       class="radio radio-primary"
+                                       x-model="selectedAnswers[{{ question.id }}]"
+                                       :disabled="isSubmitted"
+                                       required>
+                                <span class="flex-1">
+                                    <span class="font-semibold mr-2">{{ "ABCDEFGHIJ"|slice:forloop.counter0|slice:":1" }})</span>
+                                    {{ option }}
+                                </span>
+                            </label>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Submit Button -->
+            <div class="sticky bottom-4 mt-6" x-show="!isSubmitted">
+                <button type="submit"
+                        class="btn btn-success btn-lg w-full shadow-lg"
+                        :disabled="!isFormComplete() || isSubmitting">
+                    <i class="fas fa-check-circle mr-2"></i>
+                    <span x-text="isSubmitting ? 'Submitting...' : 'Submit Test'"></span>
+                </button>
+            </div>
+        </form>
+
+        <!-- Completion Message -->
+        <div x-show="isSubmitted" x-cloak class="alert alert-success mt-6 shadow-lg">
+            <i class="fas fa-check-circle text-2xl"></i>
+            <div>
+                <h3 class="font-bold">Test Submitted Successfully!</h3>
+                <p>Click the "Results" button to view your score and answers.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Sidebar (25% on desktop, full width on mobile) -->
+    <div class="lg:w-1/4 w-full">
+        <div class="sticky top-20">
+            <!-- Results Button (Always Visible) -->
+            <button @click="toggleResults"
+                    class="btn btn-primary w-full mb-4"
+                    :class="{ 'btn-disabled': !hasAttempt }">
+                <i class="fas fa-chart-bar mr-2"></i>
+                Results
+            </button>
+
+            <!-- Results Panel (Shows when button clicked and test submitted) -->
+            <div x-show="showResults && hasAttempt"
+                 x-cloak
+                 x-transition
+                 class="card bg-base-100 shadow-xl">
+                <div class="card-body p-4">
+                    <!-- Score Header -->
+                    <div class="text-center mb-4 p-4 bg-gradient-to-r from-success to-primary text-white rounded-lg">
+                        <div class="text-3xl font-bold">{{ attempt.auto_score }}/{{ attempt.total_possible }}</div>
+                        <div class="text-sm opacity-90">{{ attempt.calculate_percentage }}%</div>
+                    </div>
+
+                    <!-- Results Table -->
+                    <div class="overflow-x-auto">
+                        <table class="table table-xs table-pin-rows">
+                            <thead>
+                                <tr class="bg-base-200">
+                                    <th class="text-center">Q</th>
+                                    <th class="text-center">Your</th>
+                                    <th class="text-center">Correct</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for answer in answers %}
+                                <tr class="{% if answer.is_correct %}bg-success/20{% else %}bg-error/20{% endif %}">
+                                    <td class="text-center font-bold">{{ forloop.counter }}</td>
+                                    <td class="text-center font-mono">
+                                        {{ "ABCDEFGHIJ"|slice:answer.selected_option|slice:":1" }}
+                                    </td>
+                                    <td class="text-center font-mono">
+                                        {{ "ABCDEFGHIJ"|slice:answer.question.correct_option|slice:":1" }}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Summary -->
+                    <div class="mt-4 text-sm text-center">
+                        <div class="flex justify-around">
+                            <div>
+                                <div class="text-success font-bold text-xl">{{ correct_count }}</div>
+                                <div class="text-xs opacity-70">Correct</div>
+                            </div>
+                            <div>
+                                <div class="text-error font-bold text-xl">{{ wrong_count }}</div>
+                                <div class="text-xs opacity-70">Wrong</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Empty State (Before taking test) -->
+            <div x-show="showResults && !hasAttempt"
+                 x-cloak
+                 class="card bg-base-100 shadow-xl">
+                <div class="card-body text-center">
+                    <i class="fas fa-clipboard-list text-4xl text-base-300 mb-2"></i>
+                    <p class="text-sm text-base-content/70">Take the test to see your results here</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function testTaking() {
+    return {
+        selectedAnswers: {},
+        isSubmitted: {{ attempt.is_completed|yesno:"true,false" }},
+        hasAttempt: {{ attempt|yesno:"true,false" }},
+        showResults: false,
+        isSubmitting: false,
+
+        isFormComplete() {
+            const totalQuestions = {{ questions|length }};
+            const answeredCount = Object.keys(this.selectedAnswers).length;
+            return answeredCount === totalQuestions;
+        },
+
+        toggleResults() {
+            if (this.hasAttempt) {
+                this.showResults = !this.showResults;
+            }
+        },
+
+        async submitTest() {
+            if (!this.isFormComplete() || this.isSubmitted) return;
+
+            this.isSubmitting = true;
+
+            try {
+                const formData = new FormData(document.getElementById('test-form'));
+
+                const response = await fetch(window.location.href, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+
+                    if (data.success) {
+                        this.isSubmitted = true;
+                        this.hasAttempt = true;
+
+                        // Reload page to show results
+                        window.location.reload();
+                    } else {
+                        alert('Error: ' + (data.error || 'Failed to submit test'));
+                    }
+                } else {
+                    alert('Error submitting test. Please try again.');
+                }
+            } catch (error) {
+                console.error('Submit error:', error);
+                alert('Network error. Please check your connection.');
+            } finally {
+                this.isSubmitting = false;
+            }
+        }
+    }
+}
+</script>
+
+<style>
+[x-cloak] { display: none !important; }
+</style>
+{% endblock %}

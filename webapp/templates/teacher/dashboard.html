@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+
+{% block title %}Student Dashboard - AI QuizBot{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Welcome Header -->
+    <div>
+        <h1 class="text-3xl md:text-4xl font-bold">
+            👋 Welcome, {{ user.first_name }}!
+        </h1>
+        <p class="text-base-content/70 mt-2">Track your progress and performance</p>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Tests Taken -->
+        <div class="stats shadow bg-primary text-primary-content">
+            <div class="stat">
+                <div class="stat-figure text-4xl opacity-80">
+                    <i class="fas fa-clipboard-check"></i>
+                </div>
+                <div class="stat-title text-primary-content/80">Tests Completed</div>
+                <div class="stat-value">{{ total_tests_taken }}</div>
+                <div class="stat-desc text-primary-content/60">Total attempts</div>
+            </div>
+        </div>
+
+        <!-- Average Score -->
+        <div class="stats shadow bg-success text-success-content">
+            <div class="stat">
+                <div class="stat-figure text-4xl opacity-80">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="stat-title text-success-content/80">Average Score</div>
+                <div class="stat-value">{{ average_score }}%</div>
+                <div class="stat-desc text-success-content/60">Overall performance</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Attempts -->
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            <h2 class="card-title text-2xl mb-4">
+                <i class="fas fa-history text-primary"></i>
+                Recent Tests
+            </h2>
+
+            {% if recent_attempts %}
+            <div class="overflow-x-auto">
+                <table class="table table-zebra">
+                    <thead>
+                        <tr>
+                            <th>Test Name</th>
+                            <th>Score</th>
+                            <th>Percentage</th>
+                            <th>Completed</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for attempt in recent_attempts %}
+                        <tr>
+                            <td class="font-semibold">{{ attempt.assignment.test.title }}</td>
+                            <td>
+                                <span class="badge badge-lg {% if attempt.calculate_percentage >= 80 %}badge-success{% elif attempt.calculate_percentage >= 60 %}badge-warning{% else %}badge-error{% endif %}">
+                                    {{ attempt.auto_score }}/{{ attempt.total_possible }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="flex items-center gap-2">
+                                    <progress class="progress {% if attempt.calculate_percentage >= 80 %}progress-success{% elif attempt.calculate_percentage >= 60 %}progress-warning{% else %}progress-error{% endif %} w-20" value="{{ attempt.calculate_percentage }}" max="100"></progress>
+                                    <span class="font-bold">{{ attempt.calculate_percentage }}%</span>
+                                </div>
+                            </td>
+                            <td>{{ attempt.finished_at|date:"M d, Y" }}</td>
+                            <td>
+                                <a href="{% url 'webapp:view_result' attempt.id %}" class="btn btn-sm btn-ghost">
+                                    <i class="fas fa-eye"></i> View
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card-actions justify-end mt-4">
+                <a href="{% url 'webapp:student_history' %}" class="btn btn-outline">
+                    View All History
+                    <i class="fas fa-arrow-right ml-2"></i>
+                </a>
+            </div>
+            {% else %}
+            <div class="text-center py-12">
+                <i class="fas fa-clipboard-list text-6xl text-base-300 mb-4"></i>
+                <p class="text-xl text-base-content/70 mb-4">No tests taken yet</p>
+                <p class="text-base-content/60">Ask your teacher for a test link to get started!</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Info Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="card bg-gradient-to-br from-info to-primary text-white shadow-xl">
+            <div class="card-body">
+                <h3 class="card-title">
+                    <i class="fas fa-link"></i>
+                    How to Take a Test
+                </h3>
+                <p>Get a test link from your teacher and click it to start taking the test immediately!</p>
+            </div>
+        </div>
+
+        <div class="card bg-base-100 shadow-xl border-2 border-base-300">
+            <div class="card-body">
+                <h3 class="card-title">
+                    <i class="fas fa-trophy text-warning"></i>
+                    Track Progress
+                </h3>
+                <p>View your test history and see how you rank against other students!</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

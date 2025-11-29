@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}Welcome - AI QuizBot{% endblock %}
+
+{% block content %}
+<div class="hero min-h-screen bg-base-200">
+    <div class="hero-content text-center">
+        <div class="max-w-3xl">
+            <i class="fas fa-brain text-primary text-8xl mb-6"></i>
+            <h1 class="text-5xl md:text-6xl font-bold mb-6">AI QuizBot</h1>
+            <p class="text-xl md:text-2xl mb-8">Create intelligent tests in seconds with AI</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+                <div class="card bg-base-100 shadow-xl">
+                    <div class="card-body">
+                        <i class="fas fa-chalkboard-teacher text-4xl text-primary mb-4"></i>
+                        <h3 class="card-title justify-center">For Teachers</h3>
+                        <p>Generate custom tests with natural language. Just describe what you need!</p>
+                    </div>
+                </div>
+
+                <div class="card bg-base-100 shadow-xl">
+                    <div class="card-body">
+                        <i class="fas fa-graduation-cap text-4xl text-secondary mb-4"></i>
+                        <h3 class="card-title justify-center">For Students</h3>
+                        <p>Take tests anywhere, anytime. Get instant results and track your progress.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="{% url 'webapp:register' %}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-user-plus mr-2"></i> Get Started
+                </a>
+                <a href="{% url 'webapp:login' %}" class="btn btn-outline btn-lg">
+                    <i class="fas fa-sign-in-alt mr-2"></i> Login
+                </a>
+            </div>
+
+            <div class="mt-16">
+                <h2 class="text-3xl font-bold mb-8">Features</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="card bg-base-100 shadow-lg">
+                        <div class="card-body items-center text-center">
+                            <i class="fas fa-robot text-3xl text-primary mb-2"></i>
+                            <h4 class="font-bold">AI-Powered</h4>
+                            <p class="text-sm">Advanced AI generates high-quality questions instantly</p>
+                        </div>
+                    </div>
+
+                    <div class="card bg-base-100 shadow-lg">
+                        <div class="card-body items-center text-center">
+                            <i class="fas fa-mobile-alt text-3xl text-primary mb-2"></i>
+                            <h4 class="font-bold">Mobile-First</h4>
+                            <p class="text-sm">Works perfectly on all devices - phone, tablet, desktop</p>
+                        </div>
+                    </div>
+
+                    <div class="card bg-base-100 shadow-lg">
+                        <div class="card-body items-center text-center">
+                            <i class="fas fa-chart-line text-3xl text-primary mb-2"></i>
+                            <h4 class="font-bold">Analytics</h4>
+                            <p class="text-sm">Track performance, rankings, and detailed statistics</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

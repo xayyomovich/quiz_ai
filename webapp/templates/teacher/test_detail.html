@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ test.title }} - AI QuizBot{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row justify-between items-start gap-4">
+        <div>
+            <h1 class="text-3xl md:text-4xl font-bold mb-2">{{ test.title }}</h1>
+            <p class="text-base-content/70">{{ test.description }}</p>
+            <div class="flex flex-wrap gap-2 mt-3">
+                <span class="badge badge-primary">{{ test.topic|default:"General" }}</span>
+                <span class="badge badge-outline">{{ questions.count }} Questions</span>
+                {% if test.difficulty %}
+                <span class="badge badge-outline capitalize">{{ test.difficulty }}</span>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if user.role == 'teacher' and test.teacher == user %}
+        <div class="flex flex-wrap gap-2">
+            {% if not assignments %}
+            <a href="{% url 'webapp:publish_test' test.id %}" class="btn btn-success">
+                <i class="fas fa-share-alt mr-2"></i>
+                Publish Test
+            </a>
+            {% endif %}
+            <a href="{% url 'webapp:test_results' test.id %}" class="btn btn-primary">
+                <i class="fas fa-chart-bar mr-2"></i>
+                View Results
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Share Links (if published) -->
+    {% if assignments %}
+    <div class="card bg-gradient-to-r from-success to-primary text-white shadow-xl">
+        <div class="card-body">
+            <h3 class="card-title">
+                <i class="fas fa-share-nodes"></i>
+                Test Published!
+            </h3>
+            {% for assignment in assignments %}
+            <div class="bg-white/20 rounded-lg p-4 mt-2">
+                <p class="font-mono text-sm mb-2">{{ request.scheme }}://{{ request.get_host }}/test/{{ assignment.access_token }}</p>
+                <div class="flex gap-2">
+                    <button onclick="copyLink('{{ assignment.access_token }}')" class="btn btn-sm btn-ghost">
+                        <i class="fas fa-copy mr-1"></i> Copy Link
+                    </button>
+                    <button onclick="showQR('{{ assignment.access_token }}')" class="btn btn-sm btn-ghost">
+                        <i class="fas fa-qrcode mr-1"></i> Show QR
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Questions List -->
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            <h2 class="card-title text-2xl mb-6">
+                <i class="fas fa-list-ol text-primary"></i>
+                Questions
+            </h2>
+
+            <div class="space-y-6">
+                {% for question in questions %}
+                <div class="card bg-base-200">
+                    <div class="card-body">
+                        <h3 class="font-bold text-lg mb-3">
+                            <span class="badge badge-primary mr-2">Q{{ forloop.counter }}</span>
+                            {{ question.question_text }}
+                        </h3>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {% for option in question.options %}
+                            <div class="flex items-center gap-2 p-3 rounded-lg {% if forloop.counter0 == question.correct_option %}bg-success/20 border-2 border-success{% else %}bg-base-100{% endif %}">
+                                <span class="badge badge-neutral">{{ "ABCDEF"|slice:forloop.counter0|slice:":1" }}</span>
+                                <span class="flex-1">{{ option }}</span>
+                                {% if forloop.counter0 == question.correct_option %}
+                                <i class="fas fa-check-circle text-success text-xl"></i>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="flex justify-between items-center mt-3 text-sm text-base-content/60">
+                            <span><i class="fas fa-star text-warning"></i> {{ question.points }} point(s)</span>
+                            <span class="badge badge-outline">{{ question.question_type|upper }}</span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Copy Link Script -->
+<script>
+function copyLink(token) {
+    const link = `${window.location.protocol}//${window.location.host}/test/${token}`;
+    navigator.clipboard.writeText(link).then(() => {
+        alert('Link copied to clipboard!');
+    });
+}
+
+function showQR(token) {
+    alert('QR code generation coming soon! For now, share this link: ' + token);
+}
+</script>
+{% endblock %}

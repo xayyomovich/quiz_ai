@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}My Test History - AI QuizBot{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div>
+        <h1 class="text-3xl font-bold">My Test History</h1>
+        <p class="text-base-content/70 mt-1">Review all your completed tests</p>
+    </div>
+
+    {% if attempts %}
+    <div class="grid gap-4">
+        {% for attempt in attempts %}
+        <div class="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow">
+            <div class="card-body">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div class="flex-1">
+                        <h3 class="card-title text-xl mb-2">
+                            {{ attempt.assignment.test.title }}
+                        </h3>
+                        <div class="flex flex-wrap gap-2 text-sm text-base-content/70">
+                            <span>
+                                <i class="fas fa-calendar mr-1"></i>
+                                {{ attempt.finished_at|date:"M d, Y" }}
+                            </span>
+                            <span>
+                                <i class="fas fa-clock mr-1"></i>
+                                {{ attempt.finished_at|date:"H:i" }}
+                            </span>
+                            <span>
+                                <i class="fas fa-redo mr-1"></i>
+                                Attempt #{{ attempt.attempt_number }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-4">
+                        <div class="stats shadow bg-base-200">
+                            <div class="stat py-3 px-4">
+                                <div class="stat-title text-xs">Score</div>
+                                <div class="stat-value text-2xl {% if attempt.calculate_percentage >= 80 %}text-success{% elif attempt.calculate_percentage >= 60 %}text-warning{% else %}text-error{% endif %}">
+                                    {{ attempt.calculate_percentage }}%
+                                </div>
+                                <div class="stat-desc text-xs">{{ attempt.auto_score }}/{{ attempt.total_possible }}</div>
+                            </div>
+                        </div>
+
+                        <a href="{% url 'webapp:take_test' attempt.assignment.access_token %}"
+                           class="btn btn-primary btn-sm">
+                            <i class="fas fa-eye mr-1"></i>
+                            View Results
+                        </a>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <progress class="progress {% if attempt.calculate_percentage >= 80 %}progress-success{% elif attempt.calculate_percentage >= 60 %}progress-warning{% else %}progress-error{% endif %} w-full"
+                              value="{{ attempt.calculate_percentage }}" max="100"></progress>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="flex justify-center mt-8">
+        <div class="stats shadow">
+            <div class="stat">
+                <div class="stat-title">Total Tests Taken</div>
+                <div class="stat-value text-primary">{{ attempts.count }}</div>
+            </div>
+        </div>
+    </div>
+
+    {% else %}
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body text-center py-20">
+            <i class="fas fa-clipboard-list text-6xl text-base-300 mb-4"></i>
+            <p class="text-xl mb-2">No test history yet</p>
+            <p class="text-base-content/70 mb-6">Take your first test to start building your history!</p>
+            <p class="text-sm text-base-content/60">
+                <i class="fas fa-info-circle mr-1"></i>
+                Ask your teacher for a test link to get started
+            </p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

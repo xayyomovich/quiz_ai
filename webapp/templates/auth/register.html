@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+
+{% block title %}Register - AI QuizBot{% endblock %}
+
+{% block content %}
+<div class="flex min-h-screen items-center justify-center">
+    <div class="card w-full max-w-md bg-base-100 shadow-2xl">
+        <div class="card-body">
+            <h2 class="card-title text-3xl font-bold justify-center mb-6">
+                <i class="fas fa-user-plus text-primary"></i>
+                <span class="ml-2">Create Account</span>
+            </h2>
+
+            <form method="post" action="{% url 'webapp:register' %}">
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                <div class="alert alert-error mb-4">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span>{{ form.non_field_errors }}</span>
+                </div>
+                {% endif %}
+
+                <!-- First Name -->
+                <div class="form-control mb-4">
+                    <label class="label">
+                        <span class="label-text font-semibold">First Name</span>
+                    </label>
+                    {{ form.first_name }}
+                    {% if form.first_name.errors %}
+                    <label class="label">
+                        <span class="label-text-alt text-error">{{ form.first_name.errors.0 }}</span>
+                    </label>
+                    {% endif %}
+                </div>
+
+                <!-- Last Name -->
+                <div class="form-control mb-4">
+                    <label class="label">
+                        <span class="label-text font-semibold">Last Name</span>
+                    </label>
+                    {{ form.last_name }}
+                    {% if form.last_name.errors %}
+                    <label class="label">
+                        <span class="label-text-alt text-error">{{ form.last_name.errors.0 }}</span>
+                    </label>
+                    {% endif %}
+                </div>
+
+                <!-- Email -->
+                <div class="form-control mb-4">
+                    <label class="label">
+                        <span class="label-text font-semibold">Email</span>
+                    </label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                    <label class="label">
+                        <span class="label-text-alt text-error">{{ form.email.errors.0 }}</span>
+                    </label>
+                    {% endif %}
+                </div>
+
+                <!-- Role -->
+                <div class="form-control mb-4">
+                    <label class="label">
+                        <span class="label-text font-semibold">I am a...</span>
+                    </label>
+                    {{ form.role }}
+                    {% if form.role.errors %}
+                    <label class="label">
+                        <span class="label-text-alt text-error">{{ form.role.errors.0 }}</span>
+                    </label>
+                    {% endif %}
+                </div>
+
+                <!-- Password -->
+                <div class="form-control mb-4">
+                    <label class="label">
+                        <span class="label-text font-semibold">Password</span>
+                    </label>
+                    {{ form.password1 }}
+                    {% if form.password1.errors %}
+                    <label class="label">
+                        <span class="label-text-alt text-error">{{ form.password1.errors.0 }}</span>
+                    </label>
+                    {% endif %}
+                </div>
+
+                <!-- Confirm Password -->
+                <div class="form-control mb-6">
+                    <label class="label">
+                        <span class="label-text font-semibold">Confirm Password</span>
+                    </label>
+                    {{ form.password2 }}
+                    {% if form.password2.errors %}
+                    <label class="label">
+                        <span class="label-text-alt text-error">{{ form.password2.errors.0 }}</span>
+                    </label>
+                    {% endif %}
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="btn btn-primary btn-block btn-lg">
+                    <i class="fas fa-user-plus mr-2"></i>
+                    Create Account
+                </button>
+            </form>
+
+            <div class="divider">OR</div>
+
+            <p class="text-center">
+                Already have an account?
+                <a href="{% url 'webapp:login' %}" class="link link-primary font-semibold">Login here</a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

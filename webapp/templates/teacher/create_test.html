@@ -1,0 +1,478 @@
+========================================
+FILE: webapp/templates/teacher/create_test.html
+========================================
+{% extends 'base.html' %}
+
+{% block title %}Create Test with AI - AI QuizBot{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="mb-8">
+        <h1 class="text-3xl md:text-4xl font-bold mb-2">
+            <i class="fas fa-magic text-primary"></i>
+            Create Test with AI
+        </h1>
+        <p class="text-base-content/70">Use AI to generate custom tests in seconds</p>
+    </div>
+
+    <div class="card bg-base-100 shadow-xl" x-data="{ mode: 'natural' }">
+        <div class="card-body">
+            <div class="tabs tabs-boxed mb-6">
+                <a class="tab tab-lg" :class="{ 'tab-active': mode === 'natural' }" @click="mode = 'natural'">
+                    <i class="fas fa-comment-dots mr-2"></i>
+                    Natural Language
+                </a>
+                <a class="tab tab-lg" :class="{ 'tab-active': mode === 'structured' }" @click="mode = 'structured'">
+                    <i class="fas fa-sliders-h mr-2"></i>
+                    Structured Form
+                </a>
+            </div>
+
+            <form method="post" action="{% url 'webapp:create_test_ai' %}">
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                <div class="alert alert-error mb-6">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span>{{ form.non_field_errors }}</span>
+                </div>
+                {% endif %}
+
+                <div x-show="mode === 'natural'" x-transition>
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text font-bold text-lg">
+                                <i class="fas fa-brain text-primary"></i>
+                                Describe your test
+                            </span>
+                        </label>
+                        {{ form.prompt }}
+                        {% if form.prompt.errors %}
+                        <label class="label">
+                            <span class="label-text-alt text-error">{{ form.prompt.errors.0 }}</span>
+                        </label>
+                        {% endif %}
+                        <label class="label">
+                            <span class="label-text-alt">
+                                <i class="fas fa-info-circle"></i>
+                                AI will parse your description and generate questions
+                            </span>
+                        </label>
+                    </div>
+
+                    <div class="alert alert-info mt-4">
+                        <div>
+                            <i class="fas fa-lightbulb text-xl"></i>
+                            <div class="ml-2">
+                                <h4 class="font-bold mb-2">Examples:</h4>
+                                <ul class="list-disc list-inside space-y-1 text-sm">
+                                    <li>"Create 10 easy biology questions about photosynthesis"</li>
+                                    <li>"15 intermediate math questions for high school"</li>
+                                    <li>"20 hard programming questions in Python"</li>
+                                    <li>"Biologiya bo'yicha 10 ta oson savol" (Uzbek)</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div x-show="mode === 'structured'" x-transition>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="form-control md:col-span-2">
+                            <label class="label">
+                                <span class="label-text font-semibold">Topic</span>
+                            </label>
+                            {{ form.topic }}
+                            {% if form.topic.errors %}
+                            <label class="label">
+                                <span class="label-text-alt text-error">{{ form.topic.errors.0 }}</span>
+                            </label>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-semibold">Number of Questions</span>
+                            </label>
+                            {{ form.question_count }}
+                            {% if form.question_count.errors %}
+                            <label class="label">
+                                <span class="label-text-alt text-error">{{ form.question_count.errors.0 }}</span>
+                            </label>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-semibold">Difficulty</span>
+                            </label>
+                            {{ form.difficulty }}
+                            {% if form.difficulty.errors %}
+                            <label class="label">
+                                <span class="label-text-alt text-error">{{ form.difficulty.errors.0 }}</span>
+                            </label>
+                            {% endif %}
+                        </div>
+
+                        <div class="form-control md:col-span-2">
+                            <label class="label">
+                                <span class="label-text font-semibold">Language</span>
+                            </label>
+                            {{ form.language }}
+                            {% if form.language.errors %}
+                            <label class="label">
+                                <span class="label-text-alt text-error">{{ form.language.errors.0 }}</span>
+                            </label>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-actions justify-end mt-8">
+                    <a href="{% url 'webapp:create_test_choice' %}" class="btn btn-ghost">
+                        <i class="fas fa-arrow-left mr-2"></i>
+                        Back
+                    </a>
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fas fa-arrow-right mr-2"></i>
+                        Continue
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="alert">
+            <i class="fas fa-robot text-2xl"></i>
+            <div>
+                <h4 class="font-bold">AI-Powered</h4>
+                <p class="text-sm">Advanced AI generates contextual questions</p>
+            </div>
+        </div>
+
+        <div class="alert">
+            <i class="fas fa-language text-2xl"></i>
+            <div>
+                <h4 class="font-bold">Multi-Language</h4>
+                <p class="text-sm">English, Uzbek, and Russian supported</p>
+            </div>
+        </div>
+
+        <div class="alert">
+            <i class="fas fa-tachometer-alt text-2xl"></i>
+            <div>
+                <h4 class="font-bold">Lightning Fast</h4>
+                <p class="text-sm">Tests generated in 5-10 seconds</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+========================================
+FILE: webapp/templates/teacher/test_list.html
+========================================
+{% extends 'base.html' %}
+
+{% block title %}My Tests - AI QuizBot{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-bold">My Tests</h1>
+            <p class="text-base-content/70 mt-1">Manage all your tests</p>
+        </div>
+        <a href="{% url 'webapp:create_test' %}" class="btn btn-primary">
+            <i class="fas fa-plus-circle mr-2"></i>Create New Test
+        </a>
+    </div>
+
+    {% if tests %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for test in tests %}
+        <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-all">
+            <div class="card-body">
+                <div class="flex justify-between items-start mb-2">
+                    <h2 class="card-title flex-1">{{ test.title }}</h2>
+                    {% if test.creation_method == 'ai' %}
+                    <span class="badge badge-primary badge-sm">
+                        <i class="fas fa-robot mr-1"></i>AI
+                    </span>
+                    {% else %}
+                    <span class="badge badge-secondary badge-sm">
+                        <i class="fas fa-pen mr-1"></i>Manual
+                    </span>
+                    {% endif %}
+                </div>
+
+                <p class="text-sm text-base-content/70 line-clamp-2">
+                    {{ test.description|default:"No description"|truncatewords:15 }}
+                </p>
+
+                <div class="flex flex-wrap gap-2 my-3">
+                    <span class="badge badge-outline">
+                        <i class="fas fa-tag mr-1"></i>
+                        {{ test.topic|default:"General" }}
+                    </span>
+                    <span class="badge badge-primary">
+                        {{ test.question_count }} Questions
+                    </span>
+                    {% if test.difficulty %}
+                    <span class="badge badge-outline capitalize">
+                        {{ test.difficulty }}
+                    </span>
+                    {% endif %}
+                </div>
+
+                <div class="text-xs text-base-content/60 mb-3">
+                    Created {{ test.created_at|date:"M d, Y" }}
+                </div>
+
+                <div class="card-actions justify-end">
+                    <a href="{% url 'webapp:test_detail' test.id %}" class="btn btn-sm btn-ghost">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                    <a href="{% url 'webapp:test_results' test.id %}" class="btn btn-sm btn-ghost">
+                        <i class="fas fa-chart-bar"></i>
+                    </a>
+                    {% if test.assignments.count == 0 %}
+                    <a href="{% url 'webapp:publish_test' test.id %}" class="btn btn-sm btn-success">
+                        <i class="fas fa-share-alt"></i>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-20">
+        <i class="fas fa-inbox text-6xl text-base-300 mb-4"></i>
+        <p class="text-xl mb-4">No tests yet</p>
+        <p class="text-base-content/70 mb-6">Create your first test to get started!</p>
+        <a href="{% url 'webapp:create_test' %}" class="btn btn-primary btn-lg">
+            <i class="fas fa-plus-circle mr-2"></i>
+            Create Your First Test
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+
+========================================
+FILE: webapp/templates/teacher/publish_test.html
+========================================
+{% extends 'base.html' %}
+
+{% block title %}Publish Test - {{ test.title }}{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold mb-2">Publish Test</h1>
+        <p class="text-base-content/70">Configure test settings before publishing</p>
+    </div>
+
+    <div class="card bg-base-100 shadow-xl mb-6">
+        <div class="card-body">
+            <h2 class="card-title text-2xl">{{ test.title }}</h2>
+            <p class="text-base-content/70 mb-4">{{ test.description }}</p>
+
+            <div class="stats bg-base-200 mb-4">
+                <div class="stat">
+                    <div class="stat-title">Questions</div>
+                    <div class="stat-value text-primary">{{ test.questions.count }}</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-title">Points</div>
+                    <div class="stat-value text-secondary">{{ test.questions.count }}</div>
+                </div>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="space-y-4">
+                    <div class="form-control">
+                        <label class="label cursor-pointer justify-start gap-4">
+                            <input type="checkbox" name="allow_retakes" class="toggle toggle-primary" checked>
+                            <div>
+                                <span class="label-text font-semibold">Allow retakes</span>
+                                <p class="text-xs text-base-content/60">Students can take test multiple times</p>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text font-semibold">Maximum attempts</span>
+                        </label>
+                        <input type="number" name="max_attempts" value="3" min="1" max="10"
+                               class="input input-bordered w-full">
+                        <label class="label">
+                            <span class="label-text-alt">Set to 0 for unlimited attempts</span>
+                        </label>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <div class="form-control">
+                        <label class="label cursor-pointer justify-start gap-4">
+                            <input type="checkbox" name="show_results_immediately" class="toggle toggle-primary" checked>
+                            <div>
+                                <span class="label-text font-semibold">Show results immediately</span>
+                                <p class="text-xs text-base-content/60">Students see score right after submit</p>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label cursor-pointer justify-start gap-4">
+                            <input type="checkbox" name="show_correct_answers" class="toggle toggle-primary" checked>
+                            <div>
+                                <span class="label-text font-semibold">Show correct answers</span>
+                                <p class="text-xs text-base-content/60">Students can review correct answers</p>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="flex gap-4 justify-end">
+                    <a href="{% url 'webapp:test_detail' test.id %}" class="btn btn-ghost">
+                        Cancel
+                    </a>
+                    <button type="submit" class="btn btn-success btn-lg">
+                        <i class="fas fa-share-alt mr-2"></i>
+                        Publish Test
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle"></i>
+        <span>After publishing, you'll get a shareable link and QR code for students</span>
+    </div>
+</div>
+{% endblock %}
+
+
+========================================
+FILE: webapp/templates/teacher/test_results.html
+========================================
+{% extends 'base.html' %}
+
+{% block title %}Results - {{ test.title }}{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex justify-between items-start">
+        <div>
+            <h1 class="text-3xl font-bold mb-2">Test Results</h1>
+            <h2 class="text-xl text-base-content/70">{{ test.title }}</h2>
+        </div>
+        <a href="{% url 'webapp:test_detail' test.id %}" class="btn btn-ghost">
+            <i class="fas fa-arrow-left mr-2"></i>Back to Test
+        </a>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="stats shadow bg-primary text-primary-content">
+            <div class="stat">
+                <div class="stat-title text-primary-content/80">Total Attempts</div>
+                <div class="stat-value">{{ total_attempts }}</div>
+            </div>
+        </div>
+        <div class="stats shadow bg-info text-info-content">
+            <div class="stat">
+                <div class="stat-title text-info-content/80">Average</div>
+                <div class="stat-value">{{ avg_score }}%</div>
+            </div>
+        </div>
+        <div class="stats shadow bg-success text-success-content">
+            <div class="stat">
+                <div class="stat-title text-success-content/80">Highest</div>
+                <div class="stat-value">{{ highest_score }}%</div>
+            </div>
+        </div>
+        <div class="stats shadow bg-error text-error-content">
+            <div class="stat">
+                <div class="stat-title text-error-content/80">Lowest</div>
+                <div class="stat-value">{{ lowest_score }}%</div>
+            </div>
+        </div>
+    </div>
+
+    {% if top_students %}
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            <h2 class="card-title text-2xl mb-4">
+                <i class="fas fa-trophy text-warning"></i>
+                Top Students
+            </h2>
+            <div class="overflow-x-auto">
+                <table class="table table-zebra">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Student</th>
+                            <th>Score</th>
+                            <th>Percentage</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in top_students %}
+                        <tr>
+                            <td class="font-bold">
+                                {% if forloop.counter == 1 %}
+                                <span class="text-2xl">🥇</span>
+                                {% elif forloop.counter == 2 %}
+                                <span class="text-2xl">🥈</span>
+                                {% elif forloop.counter == 3 %}
+                                <span class="text-2xl">🥉</span>
+                                {% else %}
+                                {{ forloop.counter }}
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="font-semibold">{{ student.student.get_full_name }}</div>
+                                <div class="text-xs text-base-content/60">{{ student.student.email }}</div>
+                            </td>
+                            <td>{{ student.score }}/{{ student.total }}</td>
+                            <td>
+                                <div class="flex items-center gap-2">
+                                    <progress class="progress {% if student.percentage >= 80 %}progress-success{% elif student.percentage >= 60 %}progress-warning{% else %}progress-error{% endif %} w-20"
+                                              value="{{ student.percentage }}" max="100"></progress>
+                                    <span class="font-bold {% if student.percentage >= 80 %}text-success{% elif student.percentage >= 60 %}text-warning{% else %}text-error{% endif %}">
+                                        {{ student.percentage }}%
+                                    </span>
+                                </div>
+                            </td>
+                            <td class="text-sm">{{ student.attempt.finished_at|date:"M d, H:i" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body text-center py-12">
+            <i class="fas fa-users text-6xl text-base-300 mb-4"></i>
+            <p class="text-xl">No students have taken this test yet</p>
+            <p class="text-base-content/70 mt-2">Share the test link with your students to get started!</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
