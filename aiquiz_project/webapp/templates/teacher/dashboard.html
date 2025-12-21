@@ -1,0 +1,261 @@
+{% extends 'base.html' %}
+
+{% block title %}Teacher Dashboard - AI QuizBot{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <!-- Welcome Header -->
+    <div>
+        <h1 class="text-3xl md:text-4xl font-bold">
+            👋 Welcome, {{ user.first_name }}!
+        </h1>
+        <p class="text-base-content/70 mt-2">Manage your tests and track student performance</p>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="stats shadow bg-primary text-primary-content">
+            <div class="stat">
+                <div class="stat-figure text-4xl opacity-80">
+                    <i class="fas fa-clipboard-list"></i>
+                </div>
+                <div class="stat-title text-primary-content/80">Total Tests</div>
+                <div class="stat-value">{{ total_tests }}</div>
+                <div class="stat-desc text-primary-content/60">{{ total_questions }} questions total</div>
+            </div>
+        </div>
+
+        <div class="stats shadow bg-success text-success-content">
+            <div class="stat">
+                <div class="stat-figure text-4xl opacity-80">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-title text-success-content/80">Total Students</div>
+                <div class="stat-value">{{ total_students }}</div>
+                <div class="stat-desc text-success-content/60">Active test takers</div>
+            </div>
+        </div>
+
+        <div class="stats shadow bg-info text-info-content">
+            <div class="stat">
+                <div class="stat-figure text-4xl opacity-80">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-title text-info-content/80">Published</div>
+                <div class="stat-value">{{ total_tests }}</div>
+                <div class="stat-desc text-info-content/60">Tests available</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="flex gap-4">
+        <a href="{% url 'webapp:create_test_choice' %}" class="btn btn-success btn-lg">
+            <i class="fas fa-plus-circle mr-2"></i>
+            Create New Test
+        </a>
+        <a href="{% url 'webapp:test_list' %}" class="btn btn-outline btn-lg">
+            <i class="fas fa-list mr-2"></i>
+            View All Tests
+        </a>
+    </div>
+
+    <!-- Recent Tests - Card Grid -->
+    <div>
+        <div class="flex justify-between items-center mb-4">
+            <h2 class="text-2xl font-bold">
+                <i class="fas fa-clock text-primary"></i>
+                Recent Tests
+            </h2>
+        </div>
+
+        {% if recent_tests %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for test in recent_tests %}
+            <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-all cursor-pointer"
+                 onclick="window.location='{% url 'webapp:test_detail' test.id %}'">
+                <div class="card-body">
+                    <!-- Header -->
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="card-title text-lg flex-1 line-clamp-2">
+                            {{ test.title }}
+                        </h3>
+                        {% if test.creation_method == 'ai' %}
+                        <span class="badge badge-primary badge-sm">
+                            <i class="fas fa-robot"></i>
+                        </span>
+                        {% else %}
+                        <span class="badge badge-secondary badge-sm">
+                            <i class="fas fa-pen"></i>
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Description -->
+                    <p class="text-sm text-base-content/70 line-clamp-2 mb-3">
+                        {{ test.description|default:"No description"|truncatewords:12 }}
+                    </p>
+
+                    <!-- Tags -->
+                    <div class="flex flex-wrap gap-2 mb-3">
+                        <span class="badge badge-outline badge-sm">
+                            <i class="fas fa-tag mr-1"></i>
+                            {{ test.topic|default:"General" }}
+                        </span>
+                        <span class="badge badge-primary badge-sm">
+                            {{ test.questions.count }} Questions
+                        </span>
+                        {% if test.difficulty %}
+                        <span class="badge badge-outline badge-sm capitalize">
+                            {{ test.difficulty }}
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Date -->
+                    <div class="text-xs text-base-content/60 mb-4">
+                        <i class="fas fa-calendar mr-1"></i>
+                        Created {{ test.created_at|date:"M d, Y" }}
+                    </div>
+
+                    <div class="divider my-2"></div>
+
+                    <!-- Actions -->
+                    <div class="card-actions justify-between items-center">
+                        {% if test.assignments.count > 0 %}
+                        <button
+                            onclick="event.stopPropagation(); openShareModal{{ test.id }}()"
+                            class="btn btn-success btn-sm">
+                            <i class="fas fa-share-alt"></i>
+                            Share
+                        </button>
+                        {% else %}
+                        <a
+                            href="{% url 'webapp:publish_test' test.id %}"
+                            onclick="event.stopPropagation()"
+                            class="btn btn-success btn-sm">
+                            <i class="fas fa-rocket"></i>
+                            Publish
+                        </a>
+                        {% endif %}
+
+                        <div class="flex gap-1">
+                            <a
+                                href="{% url 'webapp:test_results' test.id %}"
+                                onclick="event.stopPropagation()"
+                                class="btn btn-ghost btn-sm">
+                                <i class="fas fa-chart-bar"></i>
+                            </a>
+
+                            <a
+                                href="{% url 'webapp:test_detail' test.id %}"
+                                onclick="event.stopPropagation()"
+                                class="btn btn-ghost btn-sm">
+                                <i class="fas fa-eye"></i>
+                            </a>
+
+<!--                            <button-->
+<!--                                onclick="event.stopPropagation(); openDeleteModal{{ test.id }}()"-->
+<!--                                class="btn btn-ghost btn-sm text-error hover:bg-error hover:text-white">-->
+<!--                                <i class="fas fa-trash-alt"></i>-->
+<!--                            </button>-->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Share Modal for each test -->
+            {% if test.assignments.exists %}
+            {% with assignment=test.assignments.first %}
+            <dialog id="shareModal{{ test.id }}" class="modal">
+                <div class="modal-box max-w-md">
+                    <h3 class="font-bold text-xl mb-4">
+                        <i class="fas fa-share-nodes text-success"></i>
+                        Share: {{ test.title }}
+                    </h3>
+
+                    <div class="flex justify-center mb-4">
+                        <div id="qrcode{{ test.id }}" class="bg-white p-4 rounded-lg"></div>
+                    </div>
+
+                    <div class="form-control mb-4">
+                        <div class="join w-full">
+                            <input
+                                type="text"
+                                id="link{{ test.id }}"
+                                value="{{ request.scheme }}://{{ request.get_host }}{% url 'webapp:take_test' assignment.access_token %}"
+                                class="input input-bordered join-item w-full text-sm font-mono"
+                                readonly
+                            />
+                            <button onclick="copyLink{{ test.id }}()" class="btn btn-success join-item">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-success">
+                        <i class="fas fa-key"></i>
+                        <div>
+                            <div class="font-semibold text-sm">Access Code</div>
+                            <div class="font-mono text-lg">{{ assignment.access_token }}</div>
+                        </div>
+                    </div>
+
+                    <div class="modal-action">
+                        <form method="dialog">
+                            <button class="btn">Close</button>
+                        </form>
+                    </div>
+                </div>
+                <form method="dialog" class="modal-backdrop">
+                    <button>close</button>
+                </form>
+            </dialog>
+
+            <script>
+            function openShareModal{{ test.id }}() {
+                const modal = document.getElementById('shareModal{{ test.id }}');
+                modal.showModal();
+
+                // Generate QR if not already generated
+                const qr = document.getElementById('qrcode{{ test.id }}');
+                if (qr.innerHTML === '') {
+                    new QRCode(qr, {
+                        text: "{{ request.scheme }}://{{ request.get_host }}{% url 'webapp:take_test' assignment.access_token %}",
+                        width: 180,
+                        height: 180,
+                    });
+                }
+            }
+
+            function copyLink{{ test.id }}() {
+                const input = document.getElementById('link{{ test.id }}');
+                input.select();
+                document.execCommand('copy');
+
+                const btn = event.target.closest('button');
+                const orig = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check"></i>';
+                setTimeout(() => btn.innerHTML = orig, 1500);
+            }
+            </script>
+            {% endwith %}
+            {% endif %}
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body text-center py-20">
+                <i class="fas fa-inbox text-6xl text-base-300 mb-4"></i>
+                <p class="text-xl mb-4">No tests yet</p>
+                <p class="text-base-content/70 mb-6">Create your first test to get started!</p>
+                <a href="{% url 'webapp:create_test_choice' %}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-plus-circle mr-2"></i>
+                    Create Your First Test
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

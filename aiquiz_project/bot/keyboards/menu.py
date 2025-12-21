@@ -32,7 +32,7 @@ def get_teacher_main_menu():
     keyboard = ReplyKeyboardMarkup(
         keyboard=[
             [KeyboardButton(text="➕ Create Test")],
-            [KeyboardButton(text="📋 My Tests"), KeyboardButton(text="📊 View Results")],
+            [KeyboardButton(text="📋 My Tests")],
             [KeyboardButton(text="🏆 Leaderboard")],
         ],
         resize_keyboard=True

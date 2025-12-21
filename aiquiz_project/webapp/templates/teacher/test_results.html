@@ -1,0 +1,402 @@
+{% extends 'base.html' %}
+
+{% block title %}Results - {{ test.title }}{% endblock %}
+
+{% block content %}
+<div class="space-y-6" x-data="resultsPage()">
+
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row justify-between items-start gap-4">
+        <div>
+            <h1 class="text-3xl font-bold mb-2">📊 Test Results</h1>
+            <h2 class="text-xl text-base-content/70">{{ test.title }}</h2>
+            <div class="flex gap-2 mt-2">
+                <span class="badge badge-outline">{{ test.questions.count }} Questions</span>
+                {% if test.timer_minutes %}
+                <span class="badge badge-outline">⏱️ {{ test.timer_minutes }} min</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="flex gap-2">
+            <button onclick="window.location.reload()" class="btn btn-outline">
+                <i class="fas fa-sync-alt"></i> Refresh
+            </button>
+            <a href="{% url 'webapp:test_detail' test.id %}" class="btn btn-ghost">
+                <i class="fas fa-arrow-left mr-2"></i>Back to Test
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <!-- Total Students -->
+        <div class="stats shadow bg-primary text-primary-content">
+            <div class="stat p-4">
+                <div class="stat-title text-primary-content/80 text-xs">Students</div>
+                <div class="stat-value text-2xl">{{ stats.total_students }}</div>
+            </div>
+        </div>
+
+        <!-- Average Score -->
+        <div class="stats shadow bg-info text-info-content">
+            <div class="stat p-4">
+                <div class="stat-title text-info-content/80 text-xs">Average</div>
+                <div class="stat-value text-2xl">{{ stats.avg_percentage }}%</div>
+            </div>
+        </div>
+
+        <!-- Highest Score -->
+        <div class="stats shadow bg-success text-success-content">
+            <div class="stat p-4">
+                <div class="stat-title text-success-content/80 text-xs">Highest</div>
+                <div class="stat-value text-2xl">{{ stats.highest_percentage }}%</div>
+            </div>
+        </div>
+
+        <!-- Pass Rate -->
+        <div class="stats shadow bg-warning text-warning-content">
+            <div class="stat p-4">
+                <div class="stat-title text-warning-content/80 text-xs">Pass Rate</div>
+                <div class="stat-value text-2xl">{{ stats.pass_rate }}%</div>
+            </div>
+        </div>
+
+        <!-- Terminated -->
+        <div class="stats shadow bg-error text-error-content">
+            <div class="stat p-4">
+                <div class="stat-title text-error-content/80 text-xs">Terminated</div>
+                <div class="stat-value text-2xl">{{ stats.terminated_count }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Question Analysis -->
+    {% if question_stats %}
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            <h3 class="card-title">
+                <i class="fas fa-chart-line text-primary"></i>
+                Question Analysis
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Hardest Questions -->
+                <div>
+                    <h4 class="font-bold mb-2 text-error">🔴 Hardest Questions</h4>
+                    <div class="space-y-2">
+                        {% for q in question_stats.hardest %}
+                        <div class="flex justify-between items-center p-2 bg-error/10 rounded">
+                            <span class="text-sm">Q{{ q.number }}: {{ q.text|truncatewords:8 }}</span>
+                            <span class="badge badge-error">{{ q.correct_percent }}%</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Easiest Questions -->
+                <div>
+                    <h4 class="font-bold mb-2 text-success">🟢 Easiest Questions</h4>
+                    <div class="space-y-2">
+                        {% for q in question_stats.easiest %}
+                        <div class="flex justify-between items-center p-2 bg-success/10 rounded">
+                            <span class="text-sm">Q{{ q.number }}: {{ q.text|truncatewords:8 }}</span>
+                            <span class="badge badge-success">{{ q.correct_percent }}%</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Student Results Table -->
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="card-title">
+                    <i class="fas fa-users text-primary"></i>
+                    Student Results
+                </h3>
+
+                <!-- Filters -->
+                <div class="flex gap-2">
+                    <select x-model="statusFilter" class="select select-bordered select-sm">
+                        <option value="all">All Students</option>
+                        <option value="completed">✅ Completed Only</option>
+                        <option value="terminated">⚠️ Terminated Only</option>
+                        <option value="passed">✔️ Passed Only</option>
+                        <option value="failed">✖️ Failed Only</option>
+                    </select>
+
+                    <input type="text"
+                           x-model="searchQuery"
+                           placeholder="Search student..."
+                           class="input input-bordered input-sm">
+                </div>
+            </div>
+
+            {% if student_results %}
+            <div class="overflow-x-auto">
+                <table class="table table-zebra">
+                    <thead>
+                        <tr>
+                            <th class="text-center">#</th>
+                            <th>Student</th>
+                            <th class="text-center">Score</th>
+                            <th class="text-center">Status</th>
+                            <th class="text-center">Time</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template x-for="(student, idx) in filteredResults" :key="student.id">
+                            <tr :class="{
+                                'bg-error/5': student.is_terminated,
+                                'bg-success/5': student.passed && !student.is_terminated
+                            }">
+                                <!-- Rank -->
+                                <td class="text-center font-bold">
+                                    <span x-text="idx + 1"></span>
+                                    <template x-if="idx === 0 && !student.is_terminated">
+                                        <span class="ml-1">🥇</span>
+                                    </template>
+                                    <template x-if="idx === 1 && !student.is_terminated">
+                                        <span class="ml-1">🥈</span>
+                                    </template>
+                                    <template x-if="idx === 2 && !student.is_terminated">
+                                        <span class="ml-1">🥉</span>
+                                    </template>
+                                </td>
+
+                                <!-- Student Name -->
+                                <td>
+                                    <div class="font-semibold" x-text="student.name"></div>
+                                    <div class="text-xs opacity-70" x-text="student.email"></div>
+                                </td>
+
+                                <!-- Score -->
+                                <td class="text-center">
+                                    <div class="font-bold text-lg"
+                                         :class="{
+                                             'text-success': student.percentage >= 70,
+                                             'text-warning': student.percentage >= 60 && student.percentage < 70,
+                                             'text-error': student.percentage < 60
+                                         }"
+                                         x-text="student.score + '/' + student.total">
+                                    </div>
+                                    <div class="text-xs" x-text="student.percentage + '%'"></div>
+                                </td>
+
+                                <!-- Status -->
+                                <td class="text-center">
+                                    <template x-if="student.is_terminated">
+                                        <div class="tooltip" :data-tip="student.termination_reason">
+                                            <span class="badge badge-error badge-sm">
+                                                <i class="fas fa-exclamation-triangle mr-1"></i>
+                                                Terminated
+                                            </span>
+                                        </div>
+                                    </template>
+                                    <template x-if="!student.is_terminated && student.passed">
+                                        <span class="badge badge-success badge-sm">
+                                            <i class="fas fa-check mr-1"></i>
+                                            Pass
+                                        </span>
+                                    </template>
+                                    <template x-if="!student.is_terminated && !student.passed">
+                                        <span class="badge badge-error badge-sm">
+                                            <i class="fas fa-times mr-1"></i>
+                                            Fail
+                                        </span>
+                                    </template>
+                                </td>
+
+                                <!-- Time -->
+                                <td class="text-center">
+                                    <div class="text-sm" x-text="formatTime(student.time_taken)"></div>
+                                    <div class="text-xs opacity-70" x-text="formatDate(student.finished_at)"></div>
+                                </td>
+
+                                <!-- Actions -->
+                                <td class="text-center">
+                                    <button @click="viewDetails(student)" class="btn btn-sm btn-ghost">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Summary -->
+            <div class="text-center mt-4 text-sm">
+                Showing <span x-text="filteredResults.length"></span> of {{ student_results|length }} students
+            </div>
+
+            {% else %}
+            <!-- Empty State -->
+            <div class="text-center py-12">
+                <i class="fas fa-users text-6xl text-base-300 mb-4"></i>
+                <p class="text-xl">No students have taken this test yet</p>
+                <p class="text-base-content/70 mt-2">Share the test link with your students to get started!</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Detail Modal -->
+<dialog id="detailModal" class="modal">
+    <div class="modal-box max-w-4xl" x-show="selectedStudent">
+        <h3 class="font-bold text-2xl mb-4">
+            <i class="fas fa-user-circle text-primary"></i>
+            <span x-text="selectedStudent ? selectedStudent.name : ''"></span>
+        </h3>
+
+        <!-- Status Alert for Terminated -->
+        <template x-if="selectedStudent && selectedStudent.is_terminated">
+            <div class="alert alert-error mb-4">
+                <i class="fas fa-exclamation-triangle text-2xl"></i>
+                <div>
+                    <div class="font-bold">⚠️ Test Terminated - Cheating Detected</div>
+                    <div class="text-sm" x-text="'Reason: ' + selectedStudent.termination_reason"></div>
+                    <div class="text-sm" x-text="'Questions Answered: ' + selectedStudent.questions_answered + '/' + {{ test.questions.count }}"></div>
+                </div>
+            </div>
+        </template>
+
+        <!-- Score Summary -->
+        <div class="grid grid-cols-3 gap-4 mb-6">
+            <div class="stats shadow">
+                <div class="stat p-4">
+                    <div class="stat-title text-xs">Score</div>
+                    <div class="stat-value text-2xl"
+                         :class="{
+                             'text-success': selectedStudent && selectedStudent.percentage >= 70,
+                             'text-warning': selectedStudent && selectedStudent.percentage >= 60 && selectedStudent.percentage < 70,
+                             'text-error': selectedStudent && selectedStudent.percentage < 60
+                         }"
+                         x-text="selectedStudent ? selectedStudent.score + '/' + selectedStudent.total : ''">
+                    </div>
+                    <div class="stat-desc" x-text="selectedStudent ? selectedStudent.percentage + '%' : ''"></div>
+                </div>
+            </div>
+
+            <div class="stats shadow">
+                <div class="stat p-4">
+                    <div class="stat-title text-xs">Time Taken</div>
+                    <div class="stat-value text-2xl" x-text="selectedStudent ? formatTime(selectedStudent.time_taken) : ''"></div>
+                    <div class="stat-desc" x-text="selectedStudent && {{ test.timer_minutes }} ? 'Limit: {{ test.timer_minutes }} min' : 'No limit'"></div>
+                </div>
+            </div>
+
+            <div class="stats shadow">
+                <div class="stat p-4">
+                    <div class="stat-title text-xs">Accuracy</div>
+                    <div class="stat-value text-2xl text-success" x-text="selectedStudent ? selectedStudent.correct_count : ''"></div>
+                    <div class="stat-desc" x-text="selectedStudent ? selectedStudent.wrong_count + ' wrong' : ''"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Answer Breakdown -->
+        <h4 class="font-bold mb-2">📋 Answer Breakdown</h4>
+        <div class="overflow-x-auto max-h-96">
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>Q#</th>
+                        <th>Question</th>
+                        <th>Student</th>
+                        <th>Correct</th>
+                        <th>Result</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <template x-if="selectedStudent">
+                        <template x-for="(answer, idx) in selectedStudent.answers" :key="idx">
+                            <tr :class="answer.is_correct ? 'bg-success/10' : 'bg-error/10'">
+                                <td class="font-bold" x-text="idx + 1"></td>
+                                <td class="max-w-xs truncate" x-text="answer.question_text"></td>
+                                <td class="text-center font-mono" x-text="answer.selected_letter"></td>
+                                <td class="text-center font-mono" x-text="answer.correct_letter"></td>
+                                <td class="text-center">
+                                    <span x-show="answer.is_correct" class="text-success">✓</span>
+                                    <span x-show="!answer.is_correct" class="text-error">✗</span>
+                                </td>
+                            </tr>
+                        </template>
+                    </template>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="modal-action">
+            <form method="dialog">
+                <button class="btn">Close</button>
+            </form>
+        </div>
+    </div>
+    <form method="dialog" class="modal-backdrop">
+        <button>close</button>
+    </form>
+</dialog>
+
+<script>
+function resultsPage() {
+    return {
+        statusFilter: 'all',
+        searchQuery: '',
+        selectedStudent: null,
+        students: {{ student_results_json|safe }},
+
+        get filteredResults() {
+            let filtered = this.students;
+
+            // Filter by status
+            if (this.statusFilter === 'completed') {
+                filtered = filtered.filter(s => !s.is_terminated);
+            } else if (this.statusFilter === 'terminated') {
+                filtered = filtered.filter(s => s.is_terminated);
+            } else if (this.statusFilter === 'passed') {
+                filtered = filtered.filter(s => s.passed && !s.is_terminated);
+            } else if (this.statusFilter === 'failed') {
+                filtered = filtered.filter(s => !s.passed);
+            }
+
+            // Search by name or email
+            if (this.searchQuery) {
+                const query = this.searchQuery.toLowerCase();
+                filtered = filtered.filter(s =>
+                    s.name.toLowerCase().includes(query) ||
+                    s.email.toLowerCase().includes(query)
+                );
+            }
+
+            return filtered;
+        },
+
+        formatTime(seconds) {
+            if (!seconds) return '--:--';
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        },
+
+        formatDate(dateStr) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            return date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        },
+
+        viewDetails(student) {
+            this.selectedStudent = student;
+            document.getElementById('detailModal').showModal();
+        }
+    }
+}
+</script>
+
+{% endblock %}

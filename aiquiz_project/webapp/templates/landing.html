@@ -1,0 +1,427 @@
+{% extends 'base.html' %}
+
+{% block title %}CLD - Collaborative Learning Development{% endblock %}
+
+{% block extra_head %}
+<style>
+    /* Hero Background Image */
+    .hero-section {
+        background: linear-gradient(135deg, rgba(37, 99, 235, 0.9), rgba(16, 185, 129, 0.85)),
+                    url('https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+    }
+
+    /* Floating animation */
+    @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-20px); }
+    }
+
+    .float-animation {
+        animation: float 3s ease-in-out infinite;
+    }
+
+    /* Gradient text */
+    .gradient-text {
+        background: linear-gradient(135deg, #2563EB, #10B981);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    /* Card hover effect */
+    .feature-card {
+        transition: all 0.3s ease;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section min-h-screen flex items-center justify-center relative overflow-hidden">
+    <!-- Animated Shapes Background -->
+    <div class="absolute inset-0 overflow-hidden pointer-events-none">
+        <div class="absolute top-20 left-10 w-72 h-72 bg-primary/20 rounded-full blur-3xl float-animation"></div>
+        <div class="absolute bottom-20 right-10 w-96 h-96 bg-success/20 rounded-full blur-3xl float-animation" style="animation-delay: 1s;"></div>
+    </div>
+
+    <div class="container mx-auto px-4 relative z-10">
+        <div class="text-center text-white">
+            <!-- Logo -->
+            <div class="mb-8 float-animation">
+                <h1 class="text-8xl md:text-9xl font-black tracking-tighter mb-4">
+                    CLD
+                </h1>
+                <div class="h-1 w-32 bg-white mx-auto rounded-full"></div>
+            </div>
+
+            <!-- Main Heading -->
+            <h2 class="text-3xl md:text-5xl font-bold mb-6 max-w-4xl mx-auto leading-tight">
+                Collaborative Learning Development
+            </h2>
+
+            <p class="text-xl md:text-2xl mb-12 max-w-3xl mx-auto font-light">
+                AI-powered platform for modern education
+            </p>
+
+            <!-- CTA Buttons -->
+            <div class="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+                <a href="{% url 'webapp:register' %}" class="btn btn-lg bg-white text-primary hover:bg-gray-100 border-0 shadow-xl">
+                    <i class="fas fa-rocket mr-2"></i>
+                    Create Free Account
+                </a>
+                <a href="#features" class="btn btn-lg btn-outline text-white border-white hover:bg-white hover:text-primary">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    Learn More
+                </a>
+            </div>
+
+            <!-- Trust Indicators -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-3xl mx-auto">
+                <div class="backdrop-blur-sm bg-white/10 rounded-lg p-4">
+                    <div class="text-3xl font-bold">500+</div>
+                    <div class="text-sm opacity-90">Tests Created</div>
+                </div>
+                <div class="backdrop-blur-sm bg-white/10 rounded-lg p-4">
+                    <div class="text-3xl font-bold">2,000+</div>
+                    <div class="text-sm opacity-90">Active Students</div>
+                </div>
+                <div class="backdrop-blur-sm bg-white/10 rounded-lg p-4">
+                    <div class="text-3xl font-bold">50+</div>
+                    <div class="text-sm opacity-90">Schools</div>
+                </div>
+                <div class="backdrop-blur-sm bg-white/10 rounded-lg p-4">
+                    <div class="text-3xl font-bold">99%</div>
+                    <div class="text-sm opacity-90">Satisfaction</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scroll Indicator -->
+    <div class="absolute bottom-8 left-1/2 -translate-x-1/2 text-white animate-bounce">
+        <i class="fas fa-chevron-down text-2xl"></i>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section id="features" class="py-20 bg-base-100">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-16">
+            <h2 class="text-4xl md:text-5xl font-bold mb-4">
+                Powerful Features for <span class="gradient-text">Modern Education</span>
+            </h2>
+            <p class="text-xl text-base-content/70 max-w-2xl mx-auto">
+                Everything you need to create, share, and assess learning in one platform
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- Feature 1: AI Generation -->
+            <div class="feature-card card bg-base-100 shadow-xl border-2 border-base-300">
+                <div class="card-body items-center text-center">
+                    <div class="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+                        <i class="fas fa-robot text-4xl text-primary"></i>
+                    </div>
+                    <h3 class="card-title text-2xl mb-2">AI-Powered Test Generation</h3>
+                    <p class="text-base-content/70">
+                        Create professional tests in seconds using advanced AI. Just describe what you need,
+                        and our AI generates high-quality questions instantly.
+                    </p>
+                    <div class="badge badge-primary badge-lg mt-4">
+                        <i class="fas fa-bolt mr-1"></i>
+                        5-10 seconds
+                    </div>
+                </div>
+            </div>
+
+            <!-- Feature 2: Anti-Cheat -->
+            <div class="feature-card card bg-base-100 shadow-xl border-2 border-base-300">
+                <div class="card-body items-center text-center">
+                    <div class="w-20 h-20 bg-error/10 rounded-full flex items-center justify-center mb-4">
+                        <i class="fas fa-shield-alt text-4xl text-error"></i>
+                    </div>
+                    <h3 class="card-title text-2xl mb-2">Anti-Cheat Technology</h3>
+                    <p class="text-base-content/70">
+                        Advanced monitoring detects tab switching, copy-paste attempts, and suspicious behavior.
+                        Ensures fair and honest assessments for all students.
+                    </p>
+                    <div class="badge badge-error badge-lg mt-4">
+                        <i class="fas fa-lock mr-1"></i>
+                        100% Secure
+                    </div>
+                </div>
+            </div>
+
+            <!-- Feature 3: Analytics -->
+            <div class="feature-card card bg-base-100 shadow-xl border-2 border-base-300">
+                <div class="card-body items-center text-center">
+                    <div class="w-20 h-20 bg-success/10 rounded-full flex items-center justify-center mb-4">
+                        <i class="fas fa-chart-line text-4xl text-success"></i>
+                    </div>
+                    <h3 class="card-title text-2xl mb-2">Instant Results & Analytics</h3>
+                    <p class="text-base-content/70">
+                        Real-time grading, detailed performance analytics, and comprehensive reports.
+                        Track progress and identify areas for improvement instantly.
+                    </p>
+                    <div class="badge badge-success badge-lg mt-4">
+                        <i class="fas fa-tachometer-alt mr-1"></i>
+                        Real-time
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works -->
+<section id="how-it-works" class="py-20 bg-base-200">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-16">
+            <h2 class="text-4xl md:text-5xl font-bold mb-4">
+                How <span class="gradient-text">CLD</span> Works
+            </h2>
+            <p class="text-xl text-base-content/70">
+                Get started in three simple steps
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            <!-- Step 1 -->
+            <div class="text-center">
+                <div class="w-16 h-16 bg-primary text-primary-content rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
+                    1
+                </div>
+                <h3 class="text-2xl font-bold mb-2">Create Account</h3>
+                <p class="text-base-content/70">
+                    Sign up for free as a teacher or student. No credit card required.
+                </p>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="text-center">
+                <div class="w-16 h-16 bg-primary text-primary-content rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
+                    2
+                </div>
+                <h3 class="text-2xl font-bold mb-2">Create or Take Tests</h3>
+                <p class="text-base-content/70">
+                    Teachers create AI-powered tests. Students take them via simple links.
+                </p>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="text-center">
+                <div class="w-16 h-16 bg-primary text-primary-content rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
+                    3
+                </div>
+                <h3 class="text-2xl font-bold mb-2">Track Progress</h3>
+                <p class="text-base-content/70">
+                    View detailed analytics, scores, and performance insights instantly.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- For Teachers & Students -->
+<section class="py-20 bg-base-100">
+    <div class="container mx-auto px-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-6xl mx-auto">
+            <!-- For Teachers -->
+            <div class="card bg-gradient-to-br from-primary to-blue-600 text-white shadow-2xl">
+                <div class="card-body">
+                    <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mb-4">
+                        <i class="fas fa-chalkboard-teacher text-3xl"></i>
+                    </div>
+                    <h3 class="card-title text-3xl mb-4">For Teachers</h3>
+                    <ul class="space-y-3 mb-6">
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-check-circle text-xl mt-1"></i>
+                            <span>Generate tests in seconds with AI</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-check-circle text-xl mt-1"></i>
+                            <span>Set timers and automatic grading</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-check-circle text-xl mt-1"></i>
+                            <span>Monitor student progress in real-time</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-check-circle text-xl mt-1"></i>
+                            <span>Detect and prevent cheating automatically</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-check-circle text-xl mt-1"></i>
+                            <span>Share tests with a simple link or QR code</span>
+                        </li>
+                    </ul>
+                    <a href="{% url 'webapp:register' %}" class="btn bg-white text-primary hover:bg-gray-100 border-0">
+                        Start Teaching <i class="fas fa-arrow-right ml-2"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- For Students -->
+            <div class="card bg-gradient-to-br from-success to-green-600 text-white shadow-2xl">
+                <div class="card-body">
+                    <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mb-4">
+                        <i class="fas fa-graduation-cap text-3xl"></i>
+                    </div>
+                    <h3 class="card-title text-3xl mb-4">For Students</h3>
+                    <ul class="space-y-3 mb-6">
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-check-circle text-xl mt-1"></i>
+                            <span>Take tests anywhere, anytime</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-check-circle text-xl mt-1"></i>
+                            <span>Get instant results and feedback</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-check-circle text-xl mt-1"></i>
+                            <span>Review correct answers after submission</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-check-circle text-xl mt-1"></i>
+                            <span>Track your progress and performance</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <i class="fas fa-check-circle text-xl mt-1"></i>
+                            <span>Mobile-friendly interface</span>
+                        </li>
+                    </ul>
+                    <a href="{% url 'webapp:register' %}" class="btn bg-white text-success hover:bg-gray-100 border-0">
+                        Start Learning <i class="fas fa-arrow-right ml-2"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Statistics -->
+<section class="py-20 bg-gradient-to-br from-primary to-blue-600 text-white">
+    <div class="container mx-auto px-4">
+        <div class="text-center mb-12">
+            <h2 class="text-4xl md:text-5xl font-bold mb-4">
+                Trusted by Educators Worldwide
+            </h2>
+            <p class="text-xl opacity-90">
+                Join thousands of teachers and students already using CLD
+            </p>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto">
+            <div class="text-center">
+                <div class="text-5xl md:text-6xl font-bold mb-2">10K+</div>
+                <div class="text-lg opacity-90">Questions Generated</div>
+            </div>
+            <div class="text-center">
+                <div class="text-5xl md:text-6xl font-bold mb-2">500+</div>
+                <div class="text-lg opacity-90">Active Teachers</div>
+            </div>
+            <div class="text-center">
+                <div class="text-5xl md:text-6xl font-bold mb-2">2K+</div>
+                <div class="text-lg opacity-90">Students</div>
+            </div>
+            <div class="text-center">
+                <div class="text-5xl md:text-6xl font-bold mb-2">50+</div>
+                <div class="text-lg opacity-90">Institutions</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq" class="py-20 bg-base-100">
+    <div class="container mx-auto px-4 max-w-4xl">
+        <div class="text-center mb-12">
+            <h2 class="text-4xl md:text-5xl font-bold mb-4">
+                Frequently Asked Questions
+            </h2>
+        </div>
+
+        <div class="space-y-4">
+            <div class="collapse collapse-plus bg-base-200">
+                <input type="radio" name="faq-accordion" checked="checked" />
+                <div class="collapse-title text-xl font-bold">
+                    Is CLD really free to use?
+                </div>
+                <div class="collapse-content">
+                    <p>Yes! CLD is completely free for both teachers and students. Create unlimited tests and assess unlimited students at no cost.</p>
+                </div>
+            </div>
+
+            <div class="collapse collapse-plus bg-base-200">
+                <input type="radio" name="faq-accordion" />
+                <div class="collapse-title text-xl font-bold">
+                    How does the AI test generation work?
+                </div>
+                <div class="collapse-content">
+                    <p>Simply describe the topic, difficulty level, and number of questions you need. Our AI will generate a complete test with multiple-choice questions in 5-10 seconds.</p>
+                </div>
+            </div>
+
+            <div class="collapse collapse-plus bg-base-200">
+                <input type="radio" name="faq-accordion" />
+                <div class="collapse-title text-xl font-bold">
+                    What is the anti-cheat system?
+                </div>
+                <div class="collapse-content">
+                    <p>Our system monitors student behavior during tests, detecting tab switching, copy-paste attempts, and other suspicious activities. If cheating is detected, the test is automatically submitted with only answered questions graded.</p>
+                </div>
+            </div>
+
+            <div class="collapse collapse-plus bg-base-200">
+                <input type="radio" name="faq-accordion" />
+                <div class="collapse-title text-xl font-bold">
+                    Can I create tests manually?
+                </div>
+                <div class="collapse-content">
+                    <p>Absolutely! You can paste your own questions and answer keys, or use our AI to generate them. Both options are available.</p>
+                </div>
+            </div>
+
+            <div class="collapse collapse-plus bg-base-200">
+                <input type="radio" name="faq-accordion" />
+                <div class="collapse-title text-xl font-bold">
+                    Do students need to create accounts?
+                </div>
+                <div class="collapse-content">
+                    <p>Yes, students need a free account to take tests. This allows them to track their progress and view past results.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Final CTA -->
+<section class="py-20 bg-gradient-to-br from-success to-green-600 text-white">
+    <div class="container mx-auto px-4 text-center">
+        <h2 class="text-4xl md:text-5xl font-bold mb-6">
+            Ready to Transform Your Teaching?
+        </h2>
+        <p class="text-xl mb-8 max-w-2xl mx-auto">
+            Join CLD today and experience the future of education
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="{% url 'webapp:register' %}" class="btn btn-lg bg-white text-success hover:bg-gray-100 border-0 shadow-xl">
+                <i class="fas fa-rocket mr-2"></i>
+                Create Free Account
+            </a>
+            <a href="{% url 'webapp:login' %}" class="btn btn-lg btn-outline text-white border-white hover:bg-white hover:text-success">
+                <i class="fas fa-sign-in-alt mr-2"></i>
+                Login
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}

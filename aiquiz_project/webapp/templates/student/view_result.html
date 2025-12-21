@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+
+{% block title %}Test Results - {{ attempt.assignment.test.title }}{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto">
+    <!-- Results Header -->
+    <div class="card bg-gradient-to-br from-success to-primary text-white shadow-2xl mb-6">
+        <div class="card-body text-center">
+            <i class="fas fa-trophy text-6xl mb-4 animate-bounce"></i>
+            <h1 class="text-4xl md:text-5xl font-bold mb-2">Test Completed!</h1>
+            <p class="text-xl opacity-90">{{ attempt.assignment.test.title }}</p>
+        </div>
+    </div>
+
+    <!-- Score Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+        <!-- Score -->
+        <div class="stats shadow {% if percentage >= 80 %}bg-success{% elif percentage >= 60 %}bg-warning{% else %}bg-error{% endif %} text-white">
+            <div class="stat">
+                <div class="stat-figure text-4xl opacity-80">
+                    <i class="fas fa-star"></i>
+                </div>
+                <div class="stat-title text-white/80">Your Score</div>
+                <div class="stat-value">{{ attempt.auto_score }}/{{ attempt.total_possible }}</div>
+                <div class="stat-desc text-white/70 font-bold text-lg">{{ percentage }}%</div>
+            </div>
+        </div>
+
+        <!-- Rank -->
+        <div class="stats shadow bg-primary text-primary-content">
+            <div class="stat">
+                <div class="stat-figure text-4xl opacity-80">
+                    <i class="fas fa-ranking-star"></i>
+                </div>
+                <div class="stat-title text-primary-content/80">Your Rank</div>
+                <div class="stat-value">#{{ rank }}</div>
+                <div class="stat-desc text-primary-content/70">out of {{ total_students }} students</div>
+            </div>
+        </div>
+
+        <!-- Performance -->
+        <div class="stats shadow bg-info text-info-content">
+            <div class="stat">
+                <div class="stat-figure text-4xl opacity-80">
+                    {% if percentage >= 80 %}
+                    <i class="fas fa-face-smile"></i>
+                    {% elif percentage >= 60 %}
+                    <i class="fas fa-face-meh"></i>
+                    {% else %}
+                    <i class="fas fa-face-frown"></i>
+                    {% endif %}
+                </div>
+                <div class="stat-title text-info-content/80">Performance</div>
+                <div class="stat-value text-2xl">
+                    {% if percentage >= 90 %}Excellent
+                    {% elif percentage >= 80 %}Great
+                    {% elif percentage >= 70 %}Good
+                    {% elif percentage >= 60 %}Fair
+                    {% else %}Needs Work
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Message -->
+    <div class="alert {% if percentage >= 80 %}alert-success{% elif percentage >= 60 %}alert-warning{% else %}alert-error{% endif %} shadow-lg mb-6">
+        <div>
+            {% if percentage >= 90 %}
+            <i class="fas fa-trophy text-3xl"></i>
+            <div class="ml-3">
+                <h3 class="font-bold text-xl">Outstanding Performance! 🌟</h3>
+                <p>You've mastered this topic! Keep up the excellent work!</p>
+            </div>
+            {% elif percentage >= 80 %}
+            <i class="fas fa-medal text-3xl"></i>
+            <div class="ml-3">
+                <h3 class="font-bold text-xl">Great Job! 👏</h3>
+                <p>You have a strong understanding. Review a few areas for perfection!</p>
+            </div>
+            {% elif percentage >= 70 %}
+            <i class="fas fa-thumbs-up text-3xl"></i>
+            <div class="ml-3">
+                <h3 class="font-bold text-xl">Good Effort! 👍</h3>
+                <p>You're on the right track. A bit more practice will help!</p>
+            </div>
+            {% elif percentage >= 60 %}
+            <i class="fas fa-info-circle text-3xl"></i>
+            <div class="ml-3">
+                <h3 class="font-bold text-xl">Fair Attempt! 📚</h3>
+                <p>Consider reviewing the material and trying again!</p>
+            </div>
+            {% else %}
+            <i class="fas fa-book text-3xl"></i>
+            <div class="ml-3">
+                <h3 class="font-bold text-xl">Keep Practicing! 💪</h3>
+                <p>Don't give up! Review the material and take the test again.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Answer Review -->
+    {% if show_correct_answers %}
+    <div class="card bg-base-100 shadow-xl mb-6">
+        <div class="card-body">
+            <h2 class="card-title text-2xl mb-6">
+                <i class="fas fa-list-check text-primary"></i>
+                Answer Review
+            </h2>
+
+            <div class="space-y-6">
+                {% for answer in answers %}
+                <div class="card {% if answer.is_correct %}bg-success/10 border-2 border-success{% else %}bg-error/10 border-2 border-error{% endif %}">
+                    <div class="card-body">
+                        <div class="flex items-start justify-between mb-4">
+                            <h3 class="font-bold text-lg flex-1">
+                                <span class="badge {% if answer.is_correct %}badge-success{% else %}badge-error{% endif %} mr-2">
+                                    Q{{ forloop.counter }}
+                                </span>
+                                {{ answer.question.question_text }}
+                            </h3>
+                            <div class="text-right">
+                                <span class="badge badge-lg {% if answer.is_correct %}badge-success{% else %}badge-error{% endif %}">
+                                    {% if answer.is_correct %}
+                                    <i class="fas fa-check mr-1"></i> Correct
+                                    {% else %}
+                                    <i class="fas fa-times mr-1"></i> Wrong
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {% for option in answer.question.options %}
+                            <div class="flex items-center gap-2 p-3 rounded-lg
+                                {% if forloop.counter0 == answer.selected_option and answer.is_correct %}
+                                    bg-success text-success-content
+                                {% elif forloop.counter0 == answer.selected_option %}
+                                    bg-error text-error-content
+                                {% elif forloop.counter0 == answer.question.correct_option %}
+                                    bg-success/20 border-2 border-success
+                                {% else %}
+                                    bg-base-200
+                                {% endif %}">
+                                <span class="badge">{{ "ABCDEF"|slice:forloop.counter0|slice:":1" }}</span>
+                                <span class="flex-1">{{ option }}</span>
+                                {% if forloop.counter0 == answer.question.correct_option %}
+                                <i class="fas fa-check-circle text-success text-xl"></i>
+                                {% endif %}
+                                {% if forloop.counter0 == answer.selected_option and not answer.is_correct %}
+                                <i class="fas fa-times-circle text-error text-xl"></i>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="flex justify-between items-center mt-3 text-sm">
+                            <span>
+                                <i class="fas fa-star text-warning"></i>
+                                Points: {{ answer.points_earned }}/{{ answer.question.points }}
+                            </span>
+                            {% if not answer.is_correct %}
+                            <span class="text-success">
+                                <i class="fas fa-lightbulb"></i>
+                                Correct: {{ "ABCDEF"|slice:answer.question.correct_option|slice:":1" }}) {{ answer.question.options|index:answer.question.correct_option }}
+                            </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Actions -->
+    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a href="{% url 'webapp:dashboard' %}" class="btn btn-primary btn-lg">
+            <i class="fas fa-home mr-2"></i>
+            Back to Dashboard
+        </a>
+        {% if attempt.assignment.allow_retakes %}
+        <a href="{% url 'webapp:take_test' attempt.assignment.access_token %}" class="btn btn-outline btn-lg">
+            <i class="fas fa-redo mr-2"></i>
+            Retake Test
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,224 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ test.title }} - AI QuizBot{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row justify-between items-start gap-4">
+        <div>
+            <h1 class="text-3xl md:text-4xl font-bold mb-2">{{ test.title }}</h1>
+            <p class="text-base-content/70">{{ test.description }}</p>
+            <div class="flex flex-wrap gap-2 mt-3">
+                <span class="badge badge-primary">{{ test.topic|default:"General" }}</span>
+                <span class="badge badge-outline">{{ questions.count }} Questions</span>
+                {% if test.difficulty %}
+                <span class="badge badge-outline capitalize">{{ test.difficulty }}</span>
+                {% endif %}
+                {% if test.creation_method == 'ai' %}
+                <span class="badge badge-secondary"><i class="fas fa-robot mr-1"></i>AI Generated</span>
+                {% else %}
+                <span class="badge badge-accent"><i class="fas fa-pen mr-1"></i>Manual</span>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if user.role == 'teacher' and test.teacher == user %}
+        <div class="flex flex-wrap gap-2">
+            {% if assignments %}
+                <button onclick="shareModal.showModal()" class="btn btn-success btn-lg">
+                    <i class="fas fa-share-alt mr-2"></i>
+                    Share Test
+                </button>
+            {% else %}
+                <a href="{% url 'webapp:publish_test' test.id %}" class="btn btn-success btn-lg">
+                    <i class="fas fa-rocket mr-2"></i>
+                    Publish Test
+                </a>
+            {% endif %}
+            <a href="{% url 'webapp:test_results' test.id %}" class="btn btn-primary">
+                <i class="fas fa-chart-bar mr-2"></i>
+                Results
+            </a>
+            <button onclick="deleteModal.showModal()" class="btn btn-error">
+                <i class="fas fa-trash-alt mr-2"></i>
+                Delete
+            </button>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Share Modal (if published) -->
+    {% if assignments %}
+    {% with assignment=assignments.first %}
+    <dialog id="shareModal" class="modal">
+        <div class="modal-box max-w-md">
+            <h3 class="font-bold text-2xl mb-4 text-center">
+                <i class="fas fa-share-nodes text-success"></i>
+                Share Test
+            </h3>
+
+            <!-- QR Code -->
+            <div class="flex justify-center mb-6">
+                <div id="qrcode" class="bg-white p-4 rounded-lg shadow-lg"></div>
+            </div>
+
+            <!-- Test Link -->
+            <div class="form-control mb-4">
+                <label class="label">
+                    <span class="label-text font-semibold">Share this link with students:</span>
+                </label>
+                <div class="join w-full">
+                    <input
+                        type="text"
+                        id="testLink"
+                        value="{{ request.scheme }}://{{ request.get_host }}{% url 'webapp:take_test' assignment.access_token %}"
+                        class="input input-bordered join-item w-full font-mono text-sm"
+                        readonly
+                    />
+                    <button onclick="copyTestLink()" class="btn btn-success join-item">
+                        <i class="fas fa-copy"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Access Token -->
+            <div class="alert alert-success">
+                <i class="fas fa-key"></i>
+                <div>
+                    <div class="font-semibold">Access Code</div>
+                    <div class="font-mono text-xl">{{ assignment.access_token }}</div>
+                </div>
+            </div>
+
+            <div class="modal-action">
+                <form method="dialog">
+                    <button class="btn btn-lg">Close</button>
+                </form>
+            </div>
+        </div>
+        <form method="dialog" class="modal-backdrop">
+            <button>close</button>
+        </form>
+    </dialog>
+    {% endwith %}
+    {% endif %}
+
+    <!-- Questions List -->
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            <h2 class="card-title text-2xl mb-6">
+                <i class="fas fa-list-ol text-primary"></i>
+                Questions
+            </h2>
+
+            <div class="space-y-6">
+                {% for question in questions %}
+                <div class="card bg-base-200">
+                    <div class="card-body">
+                        <h3 class="font-bold text-lg mb-3">
+                            <span class="badge badge-primary mr-2">Q{{ forloop.counter }}</span>
+                            {{ question.question_text }}
+                        </h3>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            {% for option in question.options %}
+                            <div class="flex items-center gap-2 p-3 rounded-lg {% if forloop.counter0 == question.correct_option %}bg-success/20 border-2 border-success{% else %}bg-base-100{% endif %}">
+                                <span class="badge badge-neutral">{% if forloop.counter0 == 0 %}A{% elif forloop.counter0 == 1 %}B{% elif forloop.counter0 == 2 %}C{% elif forloop.counter0 == 3 %}D{% elif forloop.counter0 == 4 %}E{% elif forloop.counter0 == 5 %}F{% elif forloop.counter0 == 6 %}G{% elif forloop.counter0 == 7 %}H{% elif forloop.counter0 == 8 %}I{% elif forloop.counter0 == 9 %}J{% endif %}</span>
+                                <span class="flex-1">{{ option }}</span>
+                                {% if forloop.counter0 == question.correct_option %}
+                                <i class="fas fa-check-circle text-success text-xl"></i>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="flex justify-between items-center mt-3 text-sm text-base-content/60">
+                            <span><i class="fas fa-star text-warning"></i> {{ question.points }} point(s)</span>
+                            <span class="badge badge-outline">{{ question.question_type|upper }}</span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<dialog id="deleteModal" class="modal">
+    <div class="modal-box">
+        <h3 class="font-bold text-2xl mb-4 text-error">
+            <i class="fas fa-exclamation-triangle"></i>
+            Delete Test?
+        </h3>
+
+        <p class="mb-4">Are you sure you want to delete <strong>"{{ test.title }}"</strong>?</p>
+
+        <div class="alert alert-warning mb-4">
+            <i class="fas fa-info-circle"></i>
+            <span>This action cannot be undone. All student results will be deleted.</span>
+        </div>
+
+        <div class="modal-action">
+            <form method="dialog">
+                <button class="btn">Cancel</button>
+            </form>
+            <form method="post" action="{% url 'webapp:delete_test' test.id %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-error">
+                    <i class="fas fa-trash-alt mr-2"></i>
+                    Yes, Delete
+                </button>
+            </form>
+        </div>
+    </div>
+    <form method="dialog" class="modal-backdrop">
+        <button>close</button>
+    </form>
+</dialog>
+
+{% if assignments %}
+<script>
+// Generate QR Code
+function generateQRCode() {
+    const qrContainer = document.getElementById('qrcode');
+    if (qrContainer && qrContainer.innerHTML === '') {
+        new QRCode(qrContainer, {
+            text: "{{ request.scheme }}://{{ request.get_host }}{% url 'webapp:take_test' assignments.first.access_token %}",
+            width: 200,
+            height: 200,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+        });
+    }
+}
+
+// Show modal and generate QR
+window.shareModal = document.getElementById('shareModal');
+shareModal.addEventListener('show', generateQRCode);
+
+// Copy link function
+function copyTestLink() {
+    const linkInput = document.getElementById('testLink');
+    linkInput.select();
+    linkInput.setSelectionRange(0, 99999); // For mobile
+    document.execCommand('copy');
+
+    // Visual feedback
+    const btn = event.target.closest('button');
+    const originalHTML = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+    btn.classList.remove('btn-success');
+    btn.classList.add('btn-info');
+
+    setTimeout(() => {
+        btn.innerHTML = originalHTML;
+        btn.classList.remove('btn-info');
+        btn.classList.add('btn-success');
+    }, 2000);
+}
+</script>
+{% endif %}
+
+{% endblock %}

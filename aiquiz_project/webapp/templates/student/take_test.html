@@ -1,0 +1,562 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ test.title }} - Take Test{% endblock %}
+
+{% block content %}
+<div x-data="testSystem()" x-init="init()">
+
+    <!-- Anti-Cheat Warning Modal -->
+    <dialog id="warningModal" class="modal">
+        <div class="modal-box max-w-2xl">
+            <h3 class="font-bold text-3xl mb-4 text-center text-error">
+                <i class="fas fa-shield-alt"></i> ANTI-CHEAT WARNING
+            </h3>
+
+            <div class="alert alert-error mb-4">
+                <i class="fas fa-exclamation-triangle text-2xl"></i>
+                <span class="font-bold">This test has STRICT monitoring!</span>
+            </div>
+
+            <div class="space-y-3 mb-6">
+                <div class="flex items-start gap-3">
+                    <i class="fas fa-times-circle text-error text-xl mt-1"></i>
+                    <div>
+                        <strong>Do NOT switch tabs or windows</strong>
+                        <p class="text-sm opacity-70">Alt+Tab, Cmd+Tab, clicking outside browser</p>
+                    </div>
+                </div>
+
+                <div class="flex items-start gap-3">
+                    <i class="fas fa-times-circle text-error text-xl mt-1"></i>
+                    <div>
+                        <strong>Do NOT minimize browser</strong>
+                        <p class="text-sm opacity-70">Stay focused on this page only</p>
+                    </div>
+                </div>
+
+                <div class="flex items-start gap-3">
+                    <i class="fas fa-times-circle text-error text-xl mt-1"></i>
+                    <div>
+                        <strong>Do NOT copy/paste</strong>
+                        <p class="text-sm opacity-70">Right-click and keyboard shortcuts disabled</p>
+                    </div>
+                </div>
+
+                <div class="flex items-start gap-3">
+                    <i class="fas fa-times-circle text-error text-xl mt-1"></i>
+                    <div>
+                        <strong>Do NOT press Back button</strong>
+                        <p class="text-sm opacity-70">Navigation is locked during test</p>
+                    </div>
+                </div>
+
+                <div class="flex items-start gap-3">
+                    <i class="fas fa-times-circle text-error text-xl mt-1"></i>
+                    <div>
+                        <strong>Do NOT open other apps</strong>
+                        <p class="text-sm opacity-70">Stay on this page until finished</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert alert-warning">
+                <i class="fas fa-bolt text-2xl"></i>
+                <div>
+                    <strong class="text-lg">ANY violation will immediately:</strong>
+                    <ul class="list-disc list-inside mt-2 space-y-1">
+                        <li>Auto-submit your test</li>
+                        <li>Grade only answered questions</li>
+                        <li>Mark attempt as "Terminated"</li>
+                        <li>You CANNOT retake</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="modal-action justify-center">
+                <button @click="startTest()" class="btn btn-success btn-lg">
+                    <i class="fas fa-check-circle mr-2"></i>
+                    I Understand - Start Test
+                </button>
+            </div>
+        </div>
+    </dialog>
+
+    <!-- Timer Bar (Sticky Top) -->
+    <div x-show="testStarted && !testFinished"
+         x-cloak
+         class="sticky top-0 z-50 bg-base-100 shadow-lg border-b-4"
+         :class="timerColorClass">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div>
+                <span class="font-bold text-lg">{{ test.title }}</span>
+                <span class="badge badge-outline ml-2">{{ questions|length }} Questions</span>
+            </div>
+
+            {% if test.timer_minutes %}
+            <div class="flex items-center gap-3">
+                <i class="fas fa-clock text-2xl" :class="timerIconClass"></i>
+                <div>
+                    <div class="text-xs opacity-70">Time Remaining</div>
+                    <div class="font-mono text-2xl font-bold" x-text="formatTime(timeRemaining)"></div>
+                </div>
+            </div>
+            {% else %}
+            <div class="badge badge-lg badge-success">No Time Limit</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Secure Mode Banner -->
+    <div x-show="testStarted && !testFinished"
+         x-cloak
+         class="alert alert-error shadow-lg mb-4">
+        <i class="fas fa-lock text-2xl"></i>
+        <div>
+            <strong>🔒 Secure Mode Active</strong>
+            <p class="text-sm">Stay on this page | Don't switch tabs | Test will auto-submit if you leave</p>
+        </div>
+    </div>
+
+    <!-- Main Content: Questions + Sidebar -->
+    <div class="flex flex-col lg:flex-row gap-4">
+
+        <!-- Questions Area (75% on desktop) -->
+        <div class="flex-1 lg:w-3/4">
+            <form @submit.prevent="submitTest()" id="test-form">
+                {% csrf_token %}
+
+                <div class="space-y-4">
+                    {% for question in questions %}
+                    <div class="card bg-base-100 shadow-lg">
+                        <div class="card-body">
+                            <div class="flex justify-between items-start mb-3">
+                                <h3 class="font-bold text-lg flex-1">
+                                    <span class="badge badge-primary mr-2">Q{{ forloop.counter }}</span>
+                                    {{ question.question_text }}
+                                </h3>
+                                <span class="badge badge-outline">{{ question.points }} pt</span>
+                            </div>
+
+                            <div class="space-y-2" :class="{ 'opacity-50 pointer-events-none': testFinished }">
+                                {% for option in question.options %}
+                                <label class="flex items-center gap-3 p-3 rounded-lg border-2 cursor-pointer hover:bg-base-200 transition"
+                                       :class="{
+                                           'bg-base-200 border-primary': answers[{{ question.id }}] === {{ forloop.counter0 }},
+                                           'border-base-300': answers[{{ question.id }}] !== {{ forloop.counter0 }}
+                                       }">
+                                    <input type="radio"
+                                           name="question_{{ question.id }}"
+                                           value="{{ forloop.counter0 }}"
+                                           class="radio radio-primary"
+                                           x-model="answers[{{ question.id }}]"
+                                           @change="saveAnswer({{ question.id }}, {{ forloop.counter0 }})"
+                                           :disabled="testFinished"
+                                           required>
+                                    <span class="flex-1">
+                                        <span class="font-semibold mr-2">{{ "ABCDEFGHIJ"|slice:forloop.counter0|slice:":1" }})</span>
+                                        {{ option }}
+                                    </span>
+                                </label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Submit Button -->
+                <div x-show="testStarted && !testFinished" x-cloak class="sticky bottom-4 mt-6">
+                    <button type="submit"
+                            class="btn btn-success btn-lg w-full shadow-lg"
+                            :disabled="!canSubmit() || isSubmitting">
+                        <i class="fas fa-check-circle mr-2"></i>
+                        <span x-text="isSubmitting ? 'Submitting...' : 'Submit Test'"></span>
+                    </button>
+                </div>
+            </form>
+
+            <!-- Completion Message -->
+            <div x-show="testFinished" x-cloak class="alert alert-success mt-6 shadow-lg">
+                <i class="fas fa-check-circle text-2xl"></i>
+                <div>
+                    <h3 class="font-bold">Test Submitted Successfully!</h3>
+                    <p>Click the "Results" button to view your score and answers.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Sidebar (25% on desktop) -->
+        <div class="lg:w-1/4 w-full">
+            <div class="sticky top-20">
+                <!-- Results Button -->
+                <button @click="toggleResults()" class="btn btn-primary w-full mb-4">
+                    <i class="fas fa-chart-bar mr-2"></i>
+                    <span x-text="showResults ? 'Hide Results' : 'Show Results'"></span>
+                </button>
+
+                <!-- Results Panel -->
+                <div x-show="showResults"
+                     x-cloak
+                     x-transition
+                     class="card bg-base-100 shadow-xl"
+                     :class="{ 'lg:block': true, 'fixed inset-0 z-50 m-4': isMobile && showResults }">
+
+                    <!-- Mobile Close Button -->
+                    <button x-show="isMobile"
+                            @click="showResults = false"
+                            class="btn btn-circle btn-sm absolute top-2 right-2 lg:hidden">
+                        ✕
+                    </button>
+
+                    <div class="card-body p-4 max-h-[80vh] overflow-y-auto">
+                        <!-- Before Test -->
+                        <template x-if="!testStarted">
+                            <div class="text-center py-8">
+                                <i class="fas fa-info-circle text-6xl text-primary mb-4"></i>
+                                <h3 class="font-bold text-lg mb-2">Instructions</h3>
+                                <ul class="text-sm text-left space-y-2">
+                                    <li>• Read all questions carefully</li>
+                                    <li>• Select one answer per question</li>
+                                    <li>• You can change answers before submitting</li>
+                                    <li>• Click "Submit Test" when done</li>
+                                    {% if test.timer_minutes %}
+                                    <li>• ⏱️ Time limit: {{ test.timer_minutes }} minutes</li>
+                                    {% endif %}
+                                </ul>
+                            </div>
+                        </template>
+
+                        <!-- After Test -->
+                        <template x-if="testStarted && hasResults">
+                            <div>
+                                <!-- Score Header -->
+                                <div class="text-center mb-4 p-4 bg-gradient-to-r from-success to-primary text-white rounded-lg">
+                                    <div class="text-3xl font-bold" x-text="score + '/' + totalPoints"></div>
+                                    <div class="text-sm opacity-90" x-text="percentage.toFixed(1) + '%'"></div>
+                                    <template x-if="timeTaken">
+                                        <div class="text-xs mt-2 opacity-80">
+                                            ⏱️ Time: <span x-text="formatTime(timeTaken)"></span>
+                                        </div>
+                                    </template>
+                                </div>
+
+                                <!-- Results Table -->
+                                <div class="overflow-x-auto">
+                                    <table class="table table-xs table-pin-rows">
+                                        <thead>
+                                            <tr class="bg-base-200">
+                                                <th class="text-center">Q</th>
+                                                <th class="text-center">Your</th>
+                                                <th class="text-center">Correct</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <template x-for="(result, idx) in results" :key="idx">
+                                                <tr :class="result.is_correct ? 'bg-success/20' : 'bg-error/20'">
+                                                    <td class="text-center font-bold" x-text="idx + 1"></td>
+                                                    <td class="text-center font-mono" x-text="getOptionLetter(result.selected)"></td>
+                                                    <td class="text-center font-mono" x-text="getOptionLetter(result.correct)"></td>
+                                                </tr>
+                                            </template>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <!-- Summary -->
+                                <div class="mt-4 text-sm text-center">
+                                    <div class="flex justify-around">
+                                        <div>
+                                            <div class="text-success font-bold text-xl" x-text="correctCount"></div>
+                                            <div class="text-xs opacity-70">Correct</div>
+                                        </div>
+                                        <div>
+                                            <div class="text-error font-bold text-xl" x-text="wrongCount"></div>
+                                            <div class="text-xs opacity-70">Wrong</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function testSystem() {
+    return {
+        // State
+        testStarted: false,
+        testFinished: {{ attempt.is_completed|yesno:"true,false" }},
+        showResults: false,
+        answers: {},
+        isSubmitting: false,
+        isMobile: window.innerWidth < 1024,
+
+        // Timer
+        timeRemaining: {% if test.timer_minutes %}{{ test.timer_minutes }} * 60{% else %}0{% endif %},
+        timerInterval: null,
+        startTime: null,
+
+        // Results
+        hasResults: {% if attempt and attempt.is_completed %}true{% else %}false{% endif %},
+        score: {% if attempt %}{{ attempt.auto_score }}{% else %}0{% endif %},
+        totalPoints: {{ total_points }},
+        percentage: {% if attempt %}{{ attempt.calculate_percentage }}{% else %}0{% endif %},
+        timeTaken: {% if attempt.time_taken_seconds %}{{ attempt.time_taken_seconds }}{% else %}null{% endif %},
+        correctCount: {{ correct_count|default:0 }},
+        wrongCount: {{ wrong_count|default:0 }},
+        results: {{ results_json|safe }},
+
+        init() {
+            // Show warning modal if not started
+            if (!this.testFinished && !this.testStarted) {
+                setTimeout(() => {
+                    document.getElementById('warningModal').showModal();
+                }, 500);
+            }
+
+            // Setup anti-cheat
+            this.setupAntiCheat();
+
+            // Check mobile
+            window.addEventListener('resize', () => {
+                this.isMobile = window.innerWidth < 1024;
+            });
+        },
+
+        startTest() {
+            this.testStarted = true;
+            this.startTime = Date.now();
+            document.getElementById('warningModal').close();
+
+            // Start timer if exists
+            if ({{ test.timer_minutes|default:"0" }} > 0) {
+                this.startTimer();
+            }
+        },
+
+        startTimer() {
+            this.timerInterval = setInterval(() => {
+                this.timeRemaining--;
+
+                if (this.timeRemaining <= 0) {
+                    this.timeExpired();
+                }
+            }, 1000);
+        },
+
+        timeExpired() {
+            clearInterval(this.timerInterval);
+            alert('⏰ Time is up! Test will be submitted automatically.');
+            this.submitTest();
+        },
+
+        formatTime(seconds) {
+            if (!seconds && seconds !== 0) return '--:--';
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        },
+
+        get timerColorClass() {
+            if (this.timeRemaining > 300) return 'border-success';
+            if (this.timeRemaining > 120) return 'border-warning';
+            return 'border-error';
+        },
+
+        get timerIconClass() {
+            if (this.timeRemaining > 300) return 'text-success';
+            if (this.timeRemaining > 120) return 'text-warning';
+            return 'text-error';
+        },
+
+        canSubmit() {
+            const totalQuestions = {{ questions|length }};
+            return Object.keys(this.answers).length === totalQuestions;
+        },
+
+        async saveAnswer(questionId, optionIndex) {
+            // Save immediately via AJAX
+            try {
+                const formData = new FormData();
+                formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+                formData.append('question_id', questionId);
+                formData.append('selected_option', optionIndex);
+
+                await fetch('{{ request.path }}save/', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {'X-Requested-With': 'XMLHttpRequest'}
+                });
+            } catch (err) {
+                console.error('Failed to save answer:', err);
+            }
+        },
+
+        async submitTest() {
+            if (!this.canSubmit() || this.isSubmitting) return;
+
+            this.isSubmitting = true;
+
+            // Stop timer
+            if (this.timerInterval) {
+                clearInterval(this.timerInterval);
+            }
+
+            // Calculate time taken
+            const timeTaken = this.startTime ? Math.floor((Date.now() - this.startTime) / 1000) : null;
+
+            try {
+                const formData = new FormData(document.getElementById('test-form'));
+                if (timeTaken) {
+                    formData.append('time_taken', timeTaken);
+                }
+
+                const response = await fetch(window.location.href, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {'X-Requested-With': 'XMLHttpRequest'}
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.success) {
+                        this.testFinished = true;
+                        this.hasResults = true;
+                        this.showResults = true;
+
+                        // Update results
+                        this.score = data.score;
+                        this.percentage = data.percentage;
+                        this.correctCount = data.correct_count;
+                        this.wrongCount = data.wrong_count;
+                        this.results = data.results;
+                        this.timeTaken = data.time_taken;
+
+                        // Scroll to top
+                        window.scrollTo(0, 0);
+                    } else {
+                        alert('Error: ' + (data.error || 'Failed to submit'));
+                    }
+                }
+            } catch (err) {
+                console.error('Submit error:', err);
+                alert('Network error. Please try again.');
+            } finally {
+                this.isSubmitting = false;
+            }
+        },
+
+        toggleResults() {
+            this.showResults = !this.showResults;
+        },
+
+        getOptionLetter(index) {
+            return 'ABCDEFGHIJ'[index] || '?';
+        },
+
+        setupAntiCheat() {
+            // Disable right-click
+            document.addEventListener('contextmenu', (e) => {
+                if (this.testStarted && !this.testFinished) {
+                    e.preventDefault();
+                }
+            });
+
+            // Disable copy/paste
+            ['copy', 'paste', 'cut'].forEach(event => {
+                document.addEventListener(event, (e) => {
+                    if (this.testStarted && !this.testFinished) {
+                        e.preventDefault();
+                        this.terminateTest('Copy/paste attempt detected');
+                    }
+                });
+            });
+
+            // Detect tab/window blur
+            window.addEventListener('blur', () => {
+                if (this.testStarted && !this.testFinished) {
+                    this.terminateTest('Tab/window switched');
+                }
+            });
+
+            // Detect visibility change
+            document.addEventListener('visibilitychange', () => {
+                if (document.hidden && this.testStarted && !this.testFinished) {
+                    this.terminateTest('Page hidden/minimized');
+                }
+            });
+
+            // Disable shortcuts
+            document.addEventListener('keydown', (e) => {
+                if (!this.testStarted || this.testFinished) return;
+
+                // Ctrl+C/V/X
+                if (e.ctrlKey && ['c','v','x'].includes(e.key.toLowerCase())) {
+                    e.preventDefault();
+                    this.terminateTest('Keyboard shortcut detected');
+                }
+
+                // F12, Ctrl+Shift+I
+                if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I')) {
+                    e.preventDefault();
+                    this.terminateTest('Developer tools attempt');
+                }
+            });
+
+            // Prevent back button
+            history.pushState(null, null, location.href);
+            window.addEventListener('popstate', () => {
+                if (this.testStarted && !this.testFinished) {
+                    history.pushState(null, null, location.href);
+                    this.terminateTest('Back button pressed');
+                }
+            });
+        },
+
+        async terminateTest(reason) {
+            if (this.testFinished) return;
+
+            console.error('CHEATING DETECTED:', reason);
+
+            // Stop timer
+            if (this.timerInterval) {
+                clearInterval(this.timerInterval);
+            }
+
+            // Submit with termination flag
+            try {
+                const formData = new FormData();
+                formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+                formData.append('terminated', 'true');
+                formData.append('reason', reason);
+
+                // Add all current answers
+                for (let qid in this.answers) {
+                    formData.append(`question_${qid}`, this.answers[qid]);
+                }
+
+                await fetch(window.location.href, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {'X-Requested-With': 'XMLHttpRequest'}
+                });
+
+                // Force reload to show termination page
+                window.location.reload();
+            } catch (err) {
+                console.error('Termination failed:', err);
+            }
+        }
+    }
+}
+</script>
+
+<style>
+[x-cloak] { display: none !important; }
+</style>
+
+{% endblock %}

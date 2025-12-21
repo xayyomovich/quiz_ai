@@ -1,0 +1,288 @@
+{% extends 'base.html' %}
+
+{% block title %}Student Dashboard - CLD{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <!-- Welcome Header -->
+    <div class="card bg-gradient-to-br from-primary to-blue-600 text-white shadow-2xl">
+        <div class="card-body">
+            <h1 class="text-4xl font-bold mb-2">
+                👋 Welcome {{ user.first_name }}!
+            </h1>
+            <p class="text-xl opacity-90">Keep up the great work on your learning journey</p>
+        </div>
+    </div>
+
+    <!-- Performance Stats -->
+    <div>
+        <h2 class="text-2xl font-bold mb-4">📊 Your Performance</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <!-- Total Tests -->
+            <div class="stats shadow bg-gradient-to-br from-primary to-blue-500 text-white">
+                <div class="stat p-4">
+                    <div class="stat-figure opacity-80">
+                        <i class="fas fa-clipboard-list text-3xl"></i>
+                    </div>
+                    <div class="stat-title text-white/80 text-xs">Tests Taken</div>
+                    <div class="stat-value text-3xl">{{ total_tests_taken }}</div>
+                </div>
+            </div>
+
+            <!-- Average Score -->
+            <div class="stats shadow bg-gradient-to-br from-success to-green-500 text-white">
+                <div class="stat p-4">
+                    <div class="stat-figure opacity-80">
+                        <i class="fas fa-chart-line text-3xl"></i>
+                    </div>
+                    <div class="stat-title text-white/80 text-xs">Average Score</div>
+                    <div class="stat-value text-3xl">{{ average_score }}%</div>
+                </div>
+            </div>
+
+            <!-- Best Score -->
+            <div class="stats shadow bg-gradient-to-br from-warning to-orange-500 text-white">
+                <div class="stat p-4">
+                    <div class="stat-figure opacity-80">
+                        <i class="fas fa-star text-3xl"></i>
+                    </div>
+                    <div class="stat-title text-white/80 text-xs">Best Score</div>
+                    <div class="stat-value text-3xl">{{ highest_score }}%</div>
+                </div>
+            </div>
+
+            <!-- Rank -->
+            <div class="stats shadow bg-gradient-to-br from-error to-pink-500 text-white">
+                <div class="stat p-4">
+                    <div class="stat-figure opacity-80">
+                        <i class="fas fa-trophy text-3xl"></i>
+                    </div>
+                    <div class="stat-title text-white/80 text-xs">Overall Rank</div>
+                    <div class="stat-value text-3xl">#{{ overall_rank }}</div>
+                    <div class="stat-desc text-white/70 text-xs">of {{ total_students }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Additional Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- Tests Passed -->
+        <div class="card bg-base-100 shadow-xl border-2 border-success/20">
+            <div class="card-body">
+                <div class="flex items-center gap-4">
+                    <div class="w-16 h-16 bg-success/10 rounded-full flex items-center justify-center">
+                        <i class="fas fa-check-circle text-3xl text-success"></i>
+                    </div>
+                    <div>
+                        <div class="text-3xl font-bold text-success">{{ tests_passed }}</div>
+                        <div class="text-sm opacity-70">Tests Passed (≥60%)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Perfect Scores -->
+        <div class="card bg-base-100 shadow-xl border-2 border-warning/20">
+            <div class="card-body">
+                <div class="flex items-center gap-4">
+                    <div class="w-16 h-16 bg-warning/10 rounded-full flex items-center justify-center">
+                        <i class="fas fa-medal text-3xl text-warning"></i>
+                    </div>
+                    <div>
+                        <div class="text-3xl font-bold text-warning">{{ perfect_scores }}</div>
+                        <div class="text-sm opacity-70">Perfect Scores (100%)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Improvement -->
+        <div class="card bg-base-100 shadow-xl border-2 border-info/20">
+            <div class="card-body">
+                <div class="flex items-center gap-4">
+                    <div class="w-16 h-16 bg-info/10 rounded-full flex items-center justify-center">
+                        <i class="fas fa-arrow-trend-up text-3xl text-info"></i>
+                    </div>
+                    <div>
+                        <div class="text-3xl font-bold text-info">{{ improvement_trend }}%</div>
+                        <div class="text-sm opacity-70">
+                            {% if improvement_trend > 0 %}
+                            Improving! 📈
+                            {% elif improvement_trend < 0 %}
+                            Keep trying! 💪
+                            {% else %}
+                            Steady progress
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div>
+        <h2 class="text-2xl font-bold mb-4">⚡ Quick Actions</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <a href="{% url 'webapp:student_history' %}" class="btn btn-lg bg-gradient-to-r from-primary to-blue-500 text-white border-0 hover:shadow-xl">
+                <i class="fas fa-list mr-2"></i>
+                View All Tests
+            </a>
+            <a href="{% url 'webapp:student_rankings' %}" class="btn btn-lg bg-gradient-to-r from-success to-green-500 text-white border-0 hover:shadow-xl">
+                <i class="fas fa-trophy mr-2"></i>
+                See Rankings
+            </a>
+            <button onclick="takeTestModal.showModal()" class="btn btn-lg bg-gradient-to-r from-warning to-orange-500 text-white border-0 hover:shadow-xl">
+                <i class="fas fa-rocket mr-2"></i>
+                Take a Test
+            </button>
+            <a href="{% url 'webapp:student_progress' %}" class="btn btn-lg bg-gradient-to-r from-error to-pink-500 text-white border-0 hover:shadow-xl">
+                <i class="fas fa-chart-bar mr-2"></i>
+                Progress Report
+            </a>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div>
+        <h2 class="text-2xl font-bold mb-4">📚 Recent Activity</h2>
+
+        {% if recent_attempts %}
+        <div class="space-y-3">
+            {% for attempt in recent_attempts %}
+            <a href="{% url 'webapp:take_test' attempt.assignment.access_token %}" class="card bg-base-100 shadow-lg hover:shadow-xl transition-all cursor-pointer">
+                <div class="card-body p-4">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-4 flex-1">
+                            <div class="w-12 h-12 rounded-full flex items-center justify-center
+                                {% if attempt.calculate_percentage >= 90 %}bg-success/20 text-success
+                                {% elif attempt.calculate_percentage >= 70 %}bg-warning/20 text-warning
+                                {% else %}bg-error/20 text-error{% endif %}">
+                                <i class="fas fa-clipboard-check text-2xl"></i>
+                            </div>
+
+                            <div class="flex-1">
+                                <h3 class="font-bold text-lg">{{ attempt.assignment.test.title }}</h3>
+                                <div class="flex gap-4 text-sm text-base-content/70">
+                                    <span><i class="fas fa-calendar mr-1"></i>{{ attempt.finished_at|date:"M d, Y" }}</span>
+                                    <span><i class="fas fa-clock mr-1"></i>{{ attempt.finished_at|date:"H:i" }}</span>
+                                    {% if attempt.is_terminated %}
+                                    <span class="text-error"><i class="fas fa-exclamation-triangle mr-1"></i>Terminated</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="text-right">
+                            <div class="text-3xl font-bold
+                                {% if attempt.calculate_percentage >= 90 %}text-success
+                                {% elif attempt.calculate_percentage >= 70 %}text-warning
+                                {% else %}text-error{% endif %}">
+                                {{ attempt.calculate_percentage }}%
+                            </div>
+                            <div class="text-sm opacity-70">{{ attempt.auto_score }}/{{ attempt.total_possible }}</div>
+                        </div>
+                    </div>
+
+                    <!-- Progress bar -->
+                    <progress class="progress progress-sm
+                        {% if attempt.calculate_percentage >= 90 %}progress-success
+                        {% elif attempt.calculate_percentage >= 70 %}progress-warning
+                        {% else %}progress-error{% endif %}"
+                        value="{{ attempt.calculate_percentage }}" max="100"></progress>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+
+        <div class="text-center mt-6">
+            <a href="{% url 'webapp:student_history' %}" class="btn btn-outline btn-lg">
+                View All Tests
+                <i class="fas fa-arrow-right ml-2"></i>
+            </a>
+        </div>
+        {% else %}
+        <!-- Empty State -->
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body text-center py-16">
+                <i class="fas fa-clipboard-list text-6xl text-base-300 mb-4"></i>
+                <h3 class="text-2xl font-bold mb-2">No tests taken yet</h3>
+                <p class="text-base-content/70 mb-6">Get your test link from your teacher and start learning!</p>
+                <button onclick="takeTestModal.showModal()" class="btn btn-primary btn-lg">
+                    <i class="fas fa-rocket mr-2"></i>
+                    Take Your First Test
+                </button>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Take Test Modal -->
+<dialog id="takeTestModal" class="modal">
+    <div class="modal-box">
+        <h3 class="font-bold text-2xl mb-4">
+            <i class="fas fa-link text-primary"></i>
+            Enter Test Link
+        </h3>
+
+        <p class="mb-4">Paste the test link or access code from your teacher:</p>
+
+        <form method="get" action="{% url 'webapp:landing' %}" id="testLinkForm">
+            <div class="form-control mb-4">
+                <label class="label">
+                    <span class="label-text font-semibold">Test Link or Code</span>
+                </label>
+                <input
+                    type="text"
+                    id="testLinkInput"
+                    placeholder="http://cld.com.uz/test/abc123 or abc123"
+                    class="input input-bordered w-full"
+                    required
+                />
+            </div>
+
+            <div class="modal-action">
+                <form method="dialog">
+                    <button class="btn">Cancel</button>
+                </form>
+                <button type="button" onclick="goToTest()" class="btn btn-primary">
+                    <i class="fas fa-arrow-right mr-2"></i>
+                    Go to Test
+                </button>
+            </div>
+        </form>
+    </div>
+    <form method="dialog" class="modal-backdrop">
+        <button>close</button>
+    </form>
+</dialog>
+
+<script>
+function goToTest() {
+    const input = document.getElementById('testLinkInput').value.trim();
+
+    // Extract token from full URL or use as-is if just token
+    let token = input;
+    if (input.includes('/test/')) {
+        token = input.split('/test/')[1].split('/')[0].split('?')[0];
+    }
+
+    if (token) {
+        window.location.href = `/test/${token}/`;
+    } else {
+        alert('Please enter a valid test link or code');
+    }
+}
+
+// Allow Enter key to submit
+document.getElementById('testLinkInput').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        goToTest();
+    }
+});
+</script>
+
+{% endblock %}

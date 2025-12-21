@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+
+{% block title %}Publish Test - {{ test.title }}{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold mb-2">Publish Test</h1>
+        <p class="text-base-content/70">Share this test with your students</p>
+    </div>
+
+    <!-- Test Preview Card -->
+    <div class="card bg-base-100 shadow-xl mb-6">
+        <div class="card-body">
+            <h2 class="card-title text-2xl">{{ test.title }}</h2>
+            <p class="text-base-content/70 mb-4">{{ test.description }}</p>
+
+            <div class="stats bg-base-200 mb-4">
+                <div class="stat">
+                    <div class="stat-title">Questions</div>
+                    <div class="stat-value text-primary">{{ test.questions.count }}</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-title">Total Points</div>
+                    <div class="stat-value text-secondary">{{ test.questions.count }}</div>
+                </div>
+            </div>
+
+            {% if existing_assignment %}
+            <!-- Already Published -->
+            <div class="alert alert-success mb-4">
+                <i class="fas fa-check-circle"></i>
+                <span>This test is already published!</span>
+            </div>
+
+            <button onclick="showShareModal()" class="btn btn-primary btn-lg w-full">
+                <i class="fas fa-share-alt mr-2"></i>
+                View Share Link & QR Code
+            </button>
+            {% else %}
+            <!-- Publish Button -->
+            <form method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success btn-lg w-full">
+                    <i class="fas fa-rocket mr-2"></i>
+                    Publish Test Now
+                </button>
+            </form>
+            {% endif %}
+
+            <div class="divider"></div>
+
+            <div class="flex gap-4 justify-end">
+                <a href="{% url 'webapp:test_detail' test.id %}" class="btn btn-ghost">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Back to Test
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Share Modal -->
+{% if existing_assignment %}
+<dialog id="share_modal" class="modal">
+    <div class="modal-box max-w-md">
+        <h3 class="font-bold text-2xl mb-4 text-center">
+            <i class="fas fa-share-nodes text-primary"></i>
+            Share Test
+        </h3>
+
+        <!-- QR Code -->
+        <div class="flex justify-center mb-6">
+            <div id="qrcode" class="bg-white p-4 rounded-lg shadow-inner"></div>
+        </div>
+
+        <!-- Test Link -->
+        <div class="form-control mb-4">
+            <label class="label">
+                <span class="label-text font-semibold">Test Link</span>
+            </label>
+            <div class="join w-full">
+                <input 
+                    type="text" 
+                    id="test_link" 
+                    value="{{ request.scheme }}://{{ request.get_host }}/test/{{ existing_assignment.access_token }}" 
+                    class="input input-bordered join-item w-full font-mono text-sm" 
+                    readonly
+                />
+                <button onclick="copyLink()" class="btn btn-primary join-item">
+                    <i class="fas fa-copy"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Access Token -->
+        <div class="alert alert-info">
+            <i class="fas fa-key"></i>
+            <div>
+                <div class="font-semibold">Access Code</div>
+                <div class="font-mono text-lg">{{ existing_assignment.access_token }}</div>
+            </div>
+        </div>
+
+        <div class="modal-action">
+            <form method="dialog">
+                <button class="btn">Close</button>
+            </form>
+        </div>
+    </div>
+    <form method="dialog" class="modal-backdrop">
+        <button>close</button>
+    </form>
+</dialog>
+
+<script>
+// Generate QR Code
+function generateQR() {
+    const qrContainer = document.getElementById('qrcode');
+    qrContainer.innerHTML = ''; // Clear previous
+    
+    new QRCode(qrContainer, {
+        text: "{{ request.scheme }}://{{ request.get_host }}/test/{{ existing_assignment.access_token }}",
+        width: 200,
+        height: 200,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+    });
+}
+
+// Show modal
+function showShareModal() {
+    document.getElementById('share_modal').showModal();
+    setTimeout(generateQR, 100); // Generate after modal opens
+}
+
+// Copy link
+function copyLink() {
+    const linkInput = document.getElementById('test_link');
+    linkInput.select();
+    document.execCommand('copy');
+    
+    // Show feedback
+    const btn = event.target.closest('button');
+    const originalHTML = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-check"></i>';
+    setTimeout(() => {
+        btn.innerHTML = originalHTML;
+    }, 1500);
+}
+
+// Auto-show modal after publish
+{% if messages %}
+    {% for message in messages %}
+        {% if 'published successfully' in message.message %}
+            setTimeout(() => {
+                window.location.reload(); // Reload to show "already published" state
+            }, 1500);
+        {% endif %}
+    {% endfor %}
+{% endif %}
+</script>
+{% endif %}
+
+{% endblock %}

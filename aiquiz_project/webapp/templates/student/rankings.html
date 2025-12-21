@@ -1,0 +1,195 @@
+{% extends 'base.html' %}
+
+{% block title %}Rankings - CLD{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <!-- Header -->
+    <div class="card bg-gradient-to-br from-warning to-orange-500 text-white shadow-2xl">
+        <div class="card-body">
+            <h1 class="text-4xl font-bold mb-2">
+                🏆 Rankings & Leaderboard
+            </h1>
+            <p class="text-xl opacity-90">See how you stack up against your classmates</p>
+        </div>
+    </div>
+
+    <!-- Your Ranking Card -->
+    <div class="card bg-gradient-to-br from-primary to-blue-600 text-white shadow-xl">
+        <div class="card-body">
+            <h2 class="card-title text-2xl mb-4">
+                <i class="fas fa-user-circle"></i>
+                Your Ranking
+            </h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="stats bg-white/10 backdrop-blur">
+                    <div class="stat p-4">
+                        <div class="stat-title text-white/80 text-xs">Overall Rank</div>
+                        <div class="stat-value text-3xl text-white">#{{ your_rank }}</div>
+                        <div class="stat-desc text-white/70">of {{ total_students }} students</div>
+                    </div>
+                </div>
+
+                <div class="stats bg-white/10 backdrop-blur">
+                    <div class="stat p-4">
+                        <div class="stat-title text-white/80 text-xs">Average Score</div>
+                        <div class="stat-value text-3xl text-white">{{ your_average }}%</div>
+                        <div class="stat-desc text-white/70">{{ tests_taken }} tests taken</div>
+                    </div>
+                </div>
+
+                <div class="stats bg-white/10 backdrop-blur">
+                    <div class="stat p-4">
+                        <div class="stat-title text-white/80 text-xs">Top Score</div>
+                        <div class="stat-value text-3xl text-white">{{ your_best }}%</div>
+                        <div class="stat-desc text-white/70">Personal best</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Test Rankings -->
+    {% if recent_test_rankings %}
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            <h2 class="card-title text-2xl mb-4">
+                <i class="fas fa-list-ol text-success"></i>
+                Recent Test Rankings
+            </h2>
+
+            <div class="space-y-3">
+                {% for ranking in recent_test_rankings %}
+                <div class="flex items-center justify-between p-4 bg-base-200 rounded-lg hover:bg-base-300 transition">
+                    <div class="flex items-center gap-4 flex-1">
+                        <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                            <span class="text-2xl">
+                                {% if ranking.rank == 1 %}🥇
+                                {% elif ranking.rank == 2 %}🥈
+                                {% elif ranking.rank == 3 %}🥉
+                                {% else %}#{{ ranking.rank }}{% endif %}
+                            </span>
+                        </div>
+
+                        <div class="flex-1">
+                            <h3 class="font-bold">{{ ranking.test_name }}</h3>
+                            <p class="text-sm text-base-content/70">
+                                {{ ranking.date|date:"M d, Y" }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="text-right">
+                        <div class="text-2xl font-bold
+                            {% if ranking.percentage >= 90 %}text-success
+                            {% elif ranking.percentage >= 70 %}text-warning
+                            {% else %}text-error{% endif %}">
+                            {{ ranking.percentage }}%
+                        </div>
+                        <div class="text-sm opacity-70">
+                            #{{ ranking.rank }} of {{ ranking.total }}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Overall Leaderboard -->
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            <h2 class="card-title text-2xl mb-4">
+                <i class="fas fa-trophy text-warning"></i>
+                Overall Leaderboard
+            </h2>
+
+            <div class="overflow-x-auto">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th class="text-center">Rank</th>
+                            <th>Student</th>
+                            <th class="text-center">Tests</th>
+                            <th class="text-center">Avg Score</th>
+                            <th class="text-center">Best Score</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in leaderboard %}
+                        <tr class="{% if student.is_you %}bg-primary/10 font-bold{% endif %} hover">
+                            <!-- Rank -->
+                            <td class="text-center">
+                                <div class="text-2xl">
+                                    {% if forloop.counter == 1 %}🥇
+                                    {% elif forloop.counter == 2 %}🥈
+                                    {% elif forloop.counter == 3 %}🥉
+                                    {% else %}{{ forloop.counter }}{% endif %}
+                                </div>
+                            </td>
+
+                            <!-- Student Name -->
+                            <td>
+                                <div class="flex items-center gap-2">
+                                    <div class="avatar placeholder">
+                                        <div class="w-10 rounded-full bg-primary text-primary-content">
+                                            <span class="text-sm">{{ student.name.0 }}</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="font-semibold">
+                                            {{ student.name }}
+                                            {% if student.is_you %}
+                                            <span class="badge badge-primary badge-sm ml-2">You</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <!-- Tests -->
+                            <td class="text-center">
+                                <span class="badge badge-ghost">{{ student.tests_taken }}</span>
+                            </td>
+
+                            <!-- Average -->
+                            <td class="text-center">
+                                <div class="font-bold text-lg
+                                    {% if student.average >= 90 %}text-success
+                                    {% elif student.average >= 70 %}text-warning
+                                    {% else %}text-error{% endif %}">
+                                    {{ student.average }}%
+                                </div>
+                            </td>
+
+                            <!-- Best -->
+                            <td class="text-center">
+                                <div class="font-bold text-lg text-success">
+                                    {{ student.best }}%
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if leaderboard|length > 20 %}
+            <div class="text-center mt-4 text-sm opacity-70">
+                Showing top 20 students
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Back Button -->
+    <div class="text-center">
+        <a href="{% url 'webapp:dashboard' %}" class="btn btn-outline btn-lg">
+            <i class="fas fa-arrow-left mr-2"></i>
+            Back to Dashboard
+        </a>
+    </div>
+</div>
+{% endblock %}

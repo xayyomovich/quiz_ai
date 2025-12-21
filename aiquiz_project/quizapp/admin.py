@@ -4,16 +4,17 @@ from .models import User, Test, Question, Assignment, StudentAttempt, StudentAns
 
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
-    list_display = ['telegram_id', 'full_name', 'role', 'created_at']
-    search_fields = ['telegram_id', 'full_name', 'username']
-    list_filter = ['role', 'created_at']
+    list_display = ['id', 'email', 'first_name', 'last_name', 'role', 'created_at']
+    search_fields = ['email', 'first_name', 'last_name', 'username']
+    list_filter = ['role', 'created_at', 'email_verified']
     ordering = ['-created_at']
+    readonly_fields = ['created_at', 'updated_at']
 
 
 @admin.register(Test)
 class TestAdmin(admin.ModelAdmin):
     list_display = ['id', 'title', 'teacher', 'difficulty', 'topic', 'created_at']
-    search_fields = ['title', 'topic', 'teacher__full_name']
+    search_fields = ['title', 'topic', 'teacher__email', 'teacher__first_name', 'teacher__last_name']
     list_filter = ['difficulty', 'created_at']
     ordering = ['-created_at']
     readonly_fields = ['created_at', 'updated_at']
@@ -43,12 +44,17 @@ class AssignmentAdmin(admin.ModelAdmin):
 
 @admin.register(StudentAttempt)
 class StudentAttemptAdmin(admin.ModelAdmin):
-    list_display = ['id', 'student', 'assignment', 'attempt_number', 'auto_score', 'total_possible', 'percentage',
+    list_display = ['id', 'student_name', 'assignment', 'attempt_number', 'auto_score', 'total_possible', 'percentage',
                     'is_completed', 'started_at']
-    search_fields = ['student__full_name', 'assignment__test__title']
+    search_fields = ['student__email', 'student__first_name', 'student__last_name', 'assignment__test__title']
     list_filter = ['is_completed', 'started_at']
     ordering = ['-started_at']
     readonly_fields = ['started_at', 'finished_at']
+
+    def student_name(self, obj):
+        return obj.student.get_full_name()
+
+    student_name.short_description = 'Student'
 
     def percentage(self, obj):
         return f"{obj.calculate_percentage()}%"
@@ -59,7 +65,7 @@ class StudentAttemptAdmin(admin.ModelAdmin):
 @admin.register(StudentAnswer)
 class StudentAnswerAdmin(admin.ModelAdmin):
     list_display = ['id', 'attempt', 'question_short', 'selected_option', 'is_correct', 'points_earned', 'answered_at']
-    search_fields = ['attempt__student__full_name', 'question__question_text']
+    search_fields = ['attempt__student__email', 'question__question_text']
     list_filter = ['is_correct', 'answered_at']
     ordering = ['-answered_at']
     readonly_fields = ['answered_at']
@@ -73,11 +79,16 @@ class StudentAnswerAdmin(admin.ModelAdmin):
 
 @admin.register(Result)
 class ResultAdmin(admin.ModelAdmin):
-    list_display = ['id', 'user', 'test', 'score', 'total', 'percentage', 'created_at']
-    search_fields = ['user__full_name', 'test__title']
+    list_display = ['id', 'user_name', 'test', 'score', 'total', 'percentage', 'created_at']
+    search_fields = ['user__email', 'user__first_name', 'test__title']
     list_filter = ['created_at']
     ordering = ['-created_at']
     readonly_fields = ['created_at']
+
+    def user_name(self, obj):
+        return obj.user.get_full_name()
+
+    user_name.short_description = 'User'
 
     def percentage(self, obj):
         return f"{round((obj.score / obj.total) * 100, 2)}%" if obj.total > 0 else "0%"

@@ -1,45 +1,81 @@
+# quizapp/models.py - UPDATED VERSION
+
 from django.db import models
-import uuid
+from django.contrib.auth.models import AbstractUser
 import secrets
 import string
 
 
-class User(models.Model):
-    """User model for both teachers and students"""
-    telegram_id = models.BigIntegerField(unique=True, db_index=True)
-    username = models.CharField(max_length=255, null=True, blank=True)
-    full_name = models.CharField(max_length=255)
+class User(AbstractUser):
+    """Extended User model for web app"""
+    email = models.EmailField(unique=True, blank=False)
+
+    ROLE_CHOICES = [
+        ('teacher', 'Teacher'),
+        ('student', 'Student'),
+    ]
     role = models.CharField(
         max_length=10,
-        choices=[('student', 'Student'), ('teacher', 'Teacher')],
+        choices=ROLE_CHOICES,
         default='student'
     )
+
+    email_verified = models.BooleanField(default=False)
+    verification_token = models.CharField(max_length=100, blank=True, null=True)
+
+    telegram_id = models.BigIntegerField(unique=True, null=True, blank=True, db_index=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['username', 'first_name', 'last_name']
+
     class Meta:
         indexes = [
-            models.Index(fields=['telegram_id']),
+            models.Index(fields=['email']),
             models.Index(fields=['role']),
         ]
 
     def __str__(self):
-        return f"{self.full_name} ({self.role})"
+        return f"{self.get_full_name()} ({self.role})"
+
+    def get_full_name(self):
+        return f"{self.first_name} {self.last_name}".strip() or self.username
 
 
 class Test(models.Model):
-    """Test created by teacher via LLM"""
+    """Test created by teacher via LLM or manually"""
+    TEST_CREATION_METHODS = [
+        ('ai', 'AI Generated'),
+        ('manual', 'Manual Input'),
+    ]
+
     teacher = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tests')
     title = models.CharField(max_length=255)
     description = models.TextField(null=True, blank=True)
 
-    # Store teacher's original prompt and LLM response for auditability
-    teacher_prompt = models.TextField(help_text="Original teacher request")
+    # Creation method
+    creation_method = models.CharField(
+        max_length=10,
+        choices=TEST_CREATION_METHODS,
+        default='ai'
+    )
+
+    # Store teacher's original prompt and LLM response (for AI tests)
+    teacher_prompt = models.TextField(help_text="Original teacher request", blank=True)
     llm_response = models.JSONField(null=True, blank=True, help_text="Raw LLM JSON response")
 
     # Metadata
     difficulty = models.CharField(max_length=50, null=True, blank=True)
     topic = models.CharField(max_length=255, null=True, blank=True)
+
+    # NEW: Timer field (in minutes, optional)
+    timer_minutes = models.IntegerField(
+        null=True,
+        blank=True,
+        help_text="Time limit in minutes (leave empty for no limit)"
+    )
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -88,7 +124,7 @@ class Question(models.Model):
 
 
 class Assignment(models.Model):
-    """Published test that can be shared with students via link/QR"""
+    """Published test that can be shared with students via link"""
     test = models.ForeignKey(Test, on_delete=models.CASCADE, related_name='assignments')
 
     # Unique token for sharing (e.g., "abc123xyz")
@@ -126,9 +162,9 @@ class Assignment(models.Model):
         chars = string.ascii_lowercase + string.digits
         return ''.join(secrets.choice(chars) for _ in range(length))
 
-    def get_bot_link(self, bot_username):
-        """Generate deep link for Telegram bot"""
-        return f"https://t.me/{bot_username}?start=test_{self.access_token}"
+    def get_web_link(self, domain='localhost:8000'):
+        """Generate web link for test"""
+        return f"http://{domain}/test/{self.access_token}"
 
     def __str__(self):
         return f"Assignment: {self.test.title} ({self.access_token})"
@@ -150,8 +186,17 @@ class StudentAttempt(models.Model):
     finished_at = models.DateTimeField(null=True, blank=True)
     is_completed = models.BooleanField(default=False)
 
-    # Current question index (for tracking progress)
+    # Current question index (for tracking progress) - NOT USED in new flow
     current_question_index = models.IntegerField(default=0)
+
+    # NEW: Anti-Cheat Fields
+    is_terminated = models.BooleanField(default=False, help_text="Test terminated due to cheating")
+    termination_reason = models.CharField(max_length=255, blank=True, help_text="Reason for termination")
+    terminated_at = models.DateTimeField(null=True, blank=True)
+    questions_answered = models.IntegerField(default=0, help_text="Number of questions answered before termination")
+
+    # NEW: Timer Fields
+    time_taken_seconds = models.IntegerField(null=True, blank=True, help_text="Time taken to complete in seconds")
 
     class Meta:
         ordering = ['-started_at']
@@ -163,13 +208,22 @@ class StudentAttempt(models.Model):
         unique_together = ['assignment', 'student', 'attempt_number']
 
     def __str__(self):
-        return f"{self.student.full_name} - {self.assignment.test.title} (Attempt {self.attempt_number})"
+        return f"{self.student.get_full_name()} - {self.assignment.test.title} (Attempt {self.attempt_number})"
 
     def calculate_percentage(self):
         """Calculate percentage score"""
         if self.total_possible == 0:
             return 0
         return round((self.auto_score / self.total_possible) * 100, 2)
+
+    def get_status_display(self):
+        """Get human-readable status"""
+        if self.is_terminated:
+            return f"⚠️ Terminated: {self.termination_reason}"
+        elif self.is_completed:
+            return "✅ Completed"
+        else:
+            return "🔄 In Progress"
 
 
 class StudentAnswer(models.Model):
@@ -190,14 +244,14 @@ class StudentAnswer(models.Model):
     answered_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        ordering = ['answered_at']
+        ordering = ['question__order']  # Order by question order
         indexes = [
             models.Index(fields=['attempt', 'question']),
         ]
         unique_together = ['attempt', 'question']
 
     def __str__(self):
-        return f"Answer: {self.question.question_text[:30]}... by {self.attempt.student.full_name}"
+        return f"Answer: {self.question.question_text[:30]}... by {self.attempt.student.get_full_name()}"
 
     def auto_grade(self):
         """Automatically grade the answer for MCQ"""
@@ -212,7 +266,7 @@ class StudentAnswer(models.Model):
 
 
 class Result(models.Model):
-    """Legacy model - keeping for backward compatibility, but StudentAttempt is preferred"""
+    """Legacy model - keeping for backward compatibility"""
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     test = models.ForeignKey(Test, on_delete=models.CASCADE)
     score = models.IntegerField()
@@ -223,4 +277,4 @@ class Result(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"{self.user.full_name} - {self.test.title}: {self.score}/{self.total}"
+        return f"{self.user.get_full_name()} - {self.test.title}: {self.score}/{self.total}"

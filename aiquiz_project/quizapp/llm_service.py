@@ -96,7 +96,6 @@ class TwoModelTestGenerator:
         """Build prompt for confirmation model"""
 
         if context:
-            # Context-aware parsing (user is modifying previous request)
             prompt = f"""You are an intelligent parameter extraction assistant.
 
                 CONTEXT - Previous request:

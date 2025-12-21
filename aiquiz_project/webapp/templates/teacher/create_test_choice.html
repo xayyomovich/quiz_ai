@@ -1,0 +1,63 @@
+<!-- webapp/templates/teacher/create_test_choice.html -->
+{% extends 'base.html' %}
+
+{% block title %}Create Test - Choose Method{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto">
+    <h1 class="text-4xl font-bold mb-8 text-center">Create a New Test</h1>
+    <p class="text-center text-lg mb-12">Choose how you want to create your test</p>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <!-- AI Generation -->
+        <div class="card bg-gradient-to-br from-primary to-secondary text-white shadow-2xl hover:shadow-3xl transition-all">
+            <div class="card-body items-center text-center">
+                <i class="fas fa-robot text-6xl mb-4"></i>
+                <h2 class="card-title text-3xl mb-4">Generate with AI</h2>
+                <p class="mb-6">Let AI create questions for you in seconds. Just describe what you need!</p>
+
+                <ul class="text-left mb-6 space-y-2">
+                    <li><i class="fas fa-check mr-2"></i>Fast generation (5-10 seconds)</li>
+                    <li><i class="fas fa-check mr-2"></i>Natural language input</li>
+                    <li><i class="fas fa-check mr-2"></i>Multiple languages supported</li>
+                    <li><i class="fas fa-check mr-2"></i>Adjustable difficulty</li>
+                </ul>
+
+                <a href="{% url 'webapp:create_test_ai' %}" class="btn btn-lg btn-outline text-white border-white hover:bg-white hover:text-primary">
+                    <i class="fas fa-magic mr-2"></i>
+                    Generate with AI
+                </a>
+            </div>
+        </div>
+
+        <!-- Manual Input -->
+        <div class="card bg-base-100 shadow-2xl hover:shadow-3xl transition-all border-2 border-primary">
+            <div class="card-body items-center text-center">
+                <i class="fas fa-pen text-6xl text-primary mb-4"></i>
+                <h2 class="card-title text-3xl mb-4">Create Manually</h2>
+                <p class="mb-6">Have your own questions ready? Paste them in and we'll format everything!</p>
+
+                <ul class="text-left mb-6 space-y-2">
+                    <li><i class="fas fa-check text-primary mr-2"></i>Paste your questions</li>
+                    <li><i class="fas fa-check text-primary mr-2"></i>Paste answer keys</li>
+                    <li><i class="fas fa-check text-primary mr-2"></i>We'll parse and format</li>
+                    <li><i class="fas fa-check text-primary mr-2"></i>Full control over content</li>
+                </ul>
+
+                <a href="{% url 'webapp:create_test_manual' %}" class="btn btn-lg btn-primary">
+                    <i class="fas fa-keyboard mr-2"></i>
+                    Create Manually
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Back Button -->
+    <div class="text-center mt-12">
+        <a href="{% url 'webapp:dashboard' %}" class="btn btn-ghost">
+            <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+        </a>
+    </div>
+</div>
+{% endblock %}
+
