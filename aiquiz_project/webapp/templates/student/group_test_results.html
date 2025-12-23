@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+
+{% block title %}Results - {{ group_test.test.title }}{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto">
+    <!-- Results Header -->
+    <div class="card bg-gradient-to-br from-success to-primary text-white shadow-2xl mb-6">
+        <div class="card-body text-center">
+            <i class="fas fa-trophy text-6xl mb-4 animate-bounce"></i>
+            <h1 class="text-4xl font-bold mb-2">Test Completed!</h1>
+            <p class="text-xl opacity-90">{{ group_test.test.title }}</p>
+        </div>
+    </div>
+
+    <!-- Score Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <!-- Group Score -->
+        <div class="card bg-gradient-to-br
+            {% if group_score >= 80 %}from-success to-green-500
+            {% elif group_score >= 60 %}from-warning to-orange-500
+            {% else %}from-error to-red-500{% endif %} text-white shadow-xl">
+            <div class="card-body">
+                <h3 class="card-title text-2xl mb-4">
+                    <i class="fas fa-users"></i>
+                    Team Score
+                </h3>
+                <div class="text-center">
+                    <div class="text-6xl font-bold mb-2">{{ group_score }}%</div>
+                    <div class="text-xl opacity-90">
+                        {% if group_score >= 90 %}🌟 Excellent Teamwork!
+                        {% elif group_score >= 80 %}🎯 Great Job!
+                        {% elif group_score >= 70 %}👍 Good Effort!
+                        {% elif group_score >= 60 %}📚 Keep Practicing!
+                        {% else %}💪 Try Again!{% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Your Individual Score -->
+        <div class="card bg-gradient-to-br
+            {% if member.individual_score_percentage >= 80 %}from-info to-blue-500
+            {% elif member.individual_score_percentage >= 60 %}from-warning to-orange-500
+            {% else %}from-error to-red-500{% endif %} text-white shadow-xl">
+            <div class="card-body">
+                <h3 class="card-title text-2xl mb-4">
+                    <i class="fas fa-user"></i>
+                    Your Contribution
+                </h3>
+                <div class="text-center">
+                    <div class="text-6xl font-bold mb-2">{{ member.individual_score_percentage|floatformat:0 }}%</div>
+                    <div class="text-xl opacity-90">
+                        {% if member.individual_score_percentage >= 90 %}⭐ Outstanding!
+                        {% elif member.individual_score_percentage >= 80 %}✨ Great Work!
+                        {% elif member.individual_score_percentage >= 70 %}👏 Good Job!
+                        {% elif member.individual_score_percentage >= 60 %}📖 Fair Effort!
+                        {% else %}🔄 Improve!{% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Team Performance -->
+    <div class="card bg-base-100 shadow-xl mb-6">
+        <div class="card-body">
+            <h2 class="card-title text-2xl mb-6">
+                <i class="fas fa-chart-bar text-primary"></i>
+                Team Performance
+            </h2>
+
+            <div class="overflow-x-auto">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Team Member</th>
+                            <th class="text-center">Individual Score</th>
+                            <th class="text-center">Contribution</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for score in all_scores %}
+                        <tr {% if score.is_you %}class="bg-primary/10 font-bold"{% endif %}>
+                            <td>
+                                {% if forloop.counter == 1 %}🥇
+                                {% elif forloop.counter == 2 %}🥈
+                                {% elif forloop.counter == 3 %}🥉
+                                {% else %}{{ forloop.counter }}{% endif %}
+                            </td>
+                            <td>
+                                <div class="flex items-center gap-2">
+                                    <div class="avatar placeholder">
+                                        <div class="w-10 rounded-full bg-primary text-primary-content">
+                                            <span class="text-sm">{{ score.name.0 }}</span>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        {{ score.name }}
+                                        {% if score.is_you %}
+                                        <span class="badge badge-primary badge-sm ml-2">You</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <div class="badge badge-lg
+                                    {% if score.individual_score >= 80 %}badge-success
+                                    {% elif score.individual_score >= 60 %}badge-warning
+                                    {% else %}badge-error{% endif %}">
+                                    {{ score.individual_score }}%
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                {% if score.individual_score >= 90 %}
+                                    ⭐⭐⭐
+                                {% elif score.individual_score >= 80 %}
+                                    ⭐⭐
+                                {% elif score.individual_score >= 70 %}
+                                    ⭐
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Message -->
+    <div class="alert
+        {% if member.individual_score_percentage >= 80 %}alert-success
+        {% elif member.individual_score_percentage >= 60 %}alert-warning
+        {% else %}alert-error{% endif %} shadow-lg mb-6">
+        <div>
+            {% if member.individual_score_percentage >= 90 %}
+            <i class="fas fa-trophy text-3xl"></i>
+            <div class="ml-3">
+                <h3 class="font-bold text-xl">🌟 Outstanding Performance!</h3>
+                <p>You made excellent contributions to your team! Keep it up!</p>
+            </div>
+            {% elif member.individual_score_percentage >= 80 %}
+            <i class="fas fa-medal text-3xl"></i>
+            <div class="ml-3">
+                <h3 class="font-bold text-xl">✨ Great Teamwork!</h3>
+                <p>Your contributions really helped the team. Well done!</p>
+            </div>
+            {% elif member.individual_score_percentage >= 70 %}
+            <i class="fas fa-thumbs-up text-3xl"></i>
+            <div class="ml-3">
+                <h3 class="font-bold text-xl">👏 Good Effort!</h3>
+                <p>You participated well. Try to contribute even more next time!</p>
+            </div>
+            {% elif member.individual_score_percentage >= 60 %}
+            <i class="fas fa-info-circle text-3xl"></i>
+            <div class="ml-3">
+                <h3 class="font-bold text-xl">📖 Fair Contribution</h3>
+                <p>You participated, but try to share more of your thinking next time.</p>
+            </div>
+            {% else %}
+            <i class="fas fa-book text-3xl"></i>
+            <div class="ml-3">
+                <h3 class="font-bold text-xl">💪 Keep Practicing!</h3>
+                <p>Teamwork requires active participation. Try to contribute more next time!</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a href="{% url 'webapp:dashboard' %}" class="btn btn-primary btn-lg">
+            <i class="fas fa-home mr-2"></i>
+            Back to Dashboard
+        </a>
+    </div>
+</div>
+{% endblock %}

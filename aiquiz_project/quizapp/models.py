@@ -278,3 +278,140 @@ class Result(models.Model):
 
     def __str__(self):
         return f"{self.user.get_full_name()} - {self.test.title}: {self.score}/{self.total}"
+
+
+# ADD THESE NEW MODELS AT THE END OF quizapp/models.py
+
+class GroupTest(models.Model):
+    """Static group test (Group-1, Group-2, etc.)"""
+    group_number = models.IntegerField(unique=True, help_text="1-10 for Group-1 to Group-10")
+    test = models.ForeignKey(Test, on_delete=models.CASCADE, related_name='group_tests')
+    teacher = models.ForeignKey(User, on_delete=models.CASCADE, related_name='group_tests_created')
+
+    # Access
+    access_token = models.CharField(max_length=20, unique=True, db_index=True)
+
+    # Settings
+    timer_minutes = models.IntegerField(help_text="Time limit for the test")
+    max_group_size = models.IntegerField(default=10, help_text="Maximum students per group")
+
+    # Status
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['group_number']
+        unique_together = ['teacher', 'group_number']
+
+    def __str__(self):
+        return f"Group-{self.group_number}: {self.test.title}"
+
+    def save(self, *args, **kwargs):
+        if not self.access_token:
+            self.access_token = Assignment.generate_token()
+        super().save(*args, **kwargs)
+
+    def get_web_link(self, domain):
+        return f"http://{domain}/group-test/{self.access_token}/"
+
+
+class GroupAttempt(models.Model):
+    """One attempt by a group of students"""
+    group_test = models.ForeignKey(GroupTest, on_delete=models.CASCADE, related_name='attempts')
+
+    # Status
+    is_started = models.BooleanField(default=False)
+    is_completed = models.BooleanField(default=False)
+
+    # Scores
+    group_score_percentage = models.FloatField(default=0.0, help_text="Group answer score 0-100%")
+    total_possible = models.IntegerField(default=0)
+
+    # Timing
+    started_at = models.DateTimeField(null=True, blank=True)
+    finished_at = models.DateTimeField(null=True, blank=True)
+    time_taken_seconds = models.IntegerField(null=True, blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Attempt for {self.group_test} - {self.created_at.strftime('%Y-%m-%d %H:%M')}"
+
+
+class GroupMember(models.Model):
+    """Students who joined a group attempt"""
+    group_attempt = models.ForeignKey(GroupAttempt, on_delete=models.CASCADE, related_name='members')
+    student = models.ForeignKey(User, on_delete=models.CASCADE, related_name='group_memberships')
+
+    # Individual score
+    individual_score_percentage = models.FloatField(default=0.0, help_text="Individual contribution 0-100%")
+
+    # Status
+    has_submitted_all_opinions = models.BooleanField(default=False)
+    joined_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ['group_attempt', 'student']
+        ordering = ['joined_at']
+
+    def __str__(self):
+        return f"{self.student.get_full_name()} in {self.group_attempt}"
+
+
+class IndividualOpinion(models.Model):
+    """Each student's individual opinion for a question"""
+    group_attempt = models.ForeignKey(GroupAttempt, on_delete=models.CASCADE, related_name='opinions')
+    question = models.ForeignKey(Question, on_delete=models.CASCADE)
+    student = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    # Opinion
+    opinion_text = models.TextField(help_text="Student's individual thinking")
+
+    # AI Assessment (0-100%)
+    score_percentage = models.FloatField(default=0.0, help_text="AI-evaluated quality 0-100%")
+    ai_feedback = models.TextField(blank=True, help_text="AI's brief feedback")
+
+    submitted_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ['group_attempt', 'question', 'student']
+        ordering = ['question__order', 'submitted_at']
+
+    def __str__(self):
+        return f"{self.student.get_full_name()}'s opinion on Q{self.question.order + 1}"
+
+
+class GroupAnswer(models.Model):
+    """Final group answer for a question"""
+    group_attempt = models.ForeignKey(GroupAttempt, on_delete=models.CASCADE, related_name='answers')
+    question = models.ForeignKey(Question, on_delete=models.CASCADE)
+
+    # Answer
+    selected_option = models.IntegerField(help_text="Group's selected option index")
+    submitted_by = models.ForeignKey(User, on_delete=models.CASCADE, help_text="Who clicked submit")
+
+    # Grading
+    is_correct = models.BooleanField(default=False)
+    points_earned = models.IntegerField(default=0)
+
+    answered_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ['group_attempt', 'question']
+        ordering = ['question__order']
+
+    def __str__(self):
+        return f"Group answer for Q{self.question.order + 1}"
+
+    def auto_grade(self):
+        """Grade the group answer"""
+        if self.selected_option == self.question.correct_option:
+            self.is_correct = True
+            self.points_earned = self.question.points
+        else:
+            self.is_correct = False
+            self.points_earned = 0
+        self.save()

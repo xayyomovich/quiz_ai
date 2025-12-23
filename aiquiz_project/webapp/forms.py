@@ -245,3 +245,121 @@ D) Yurak urishi pasayishi
         help_text='Time limit in minutes (optional)',
         label='Time Limit (minutes)'
     )
+
+
+# ============================================
+# GROUP TEST FORMS (ADD AT THE END)
+# ============================================
+
+class GroupTestCreationForm(forms.Form):
+    """Form for creating a group test"""
+
+    group_number = forms.ChoiceField(
+        choices=[(i, f'Group-{i}') for i in range(1, 11)],
+        widget=forms.Select(attrs={
+            'class': 'select select-bordered w-full'
+        }),
+        help_text='Select which group slot (1-10)'
+    )
+
+    test = forms.ModelChoiceField(
+        queryset=None,  # Will be set in __init__
+        widget=forms.Select(attrs={
+            'class': 'select select-bordered w-full'
+        }),
+        help_text='Select an existing test'
+    )
+
+    timer_minutes = forms.IntegerField(
+        min_value=1,
+        max_value=180,
+        initial=20,
+        widget=forms.NumberInput(attrs={
+            'class': 'input input-bordered w-full',
+            'placeholder': '20'
+        }),
+        help_text='Time limit in minutes'
+    )
+
+    max_group_size = forms.IntegerField(
+        min_value=2,
+        max_value=20,
+        initial=6,
+        widget=forms.NumberInput(attrs={
+            'class': 'input input-bordered w-full',
+            'placeholder': '6'
+        }),
+        help_text='Maximum students allowed in this group'
+    )
+
+    def __init__(self, teacher=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if teacher:
+            # Only show teacher's tests
+            self.fields['test'].queryset = Test.objects.filter(teacher=teacher)
+
+
+class CreateGroupTestDirectForm(forms.Form):
+    """Create a group test with open-ended discussion questions"""
+
+    group_number = forms.ChoiceField(
+        choices=[(i, f'Group-{i}') for i in range(1, 11)],
+        widget=forms.Select(attrs={
+            'class': 'select select-bordered w-full'
+        }),
+        label='Group Number',
+        help_text='Select which group slot (1-10)'
+    )
+
+    title = forms.CharField(
+        max_length=255,
+        widget=forms.TextInput(attrs={
+            'class': 'input input-bordered w-full',
+            'placeholder': 'e.g., Critical Thinking Challenge'
+        }),
+        label='Test Title',
+        help_text='Give your group test a name'
+    )
+
+    questions_and_answers = forms.CharField(
+        widget=forms.Textarea(attrs={
+            'class': 'textarea textarea-bordered w-full font-mono text-sm',
+            'placeholder': '''Format:
+Q1: A girl finds a note in her room. It says: "I have a head and a tail, but no body. I am not alive. People flip me for luck. What am I?" Solve the riddle and explain why.
+A1: The riddle is about a coin. A coin has a head and a tail but no body. It's not alive. People flip coins for luck.
+
+Q2: If you have 3 apples and you take away 2, how many do you have? Explain your reasoning.
+A2: You have 2 apples because you took them away. The question asks how many YOU have, not how many are left.
+
+Q3: ...
+A3: ...''',
+            'rows': 20,
+            'spellcheck': 'false'
+        }),
+        label='Questions and Answers',
+        help_text='Use format: Q1: question text, A1: answer text, Q2: ..., A2: ...'
+    )
+
+    timer_minutes = forms.IntegerField(
+        min_value=5,
+        max_value=180,
+        initial=20,
+        widget=forms.NumberInput(attrs={
+            'class': 'input input-bordered w-full',
+            'placeholder': '20'
+        }),
+        label='Time Limit (minutes)',
+        help_text='How long students have to complete the test'
+    )
+
+    max_group_size = forms.IntegerField(
+        min_value=2,
+        max_value=20,
+        initial=6,
+        widget=forms.NumberInput(attrs={
+            'class': 'input input-bordered w-full',
+            'placeholder': '6'
+        }),
+        label='Maximum Students',
+        help_text='Maximum students allowed in this group'
+    )

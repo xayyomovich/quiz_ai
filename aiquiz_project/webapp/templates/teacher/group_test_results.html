@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+
+{% block title %}Results - Group-{{ group_test.group_number }}{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col md:flex-row justify-between items-start gap-4">
+        <div>
+            <h1 class="text-3xl font-bold mb-2">📊 Group Test Results</h1>
+            <h2 class="text-xl text-base-content/70">Group-{{ group_test.group_number }}: {{ group_test.test.title }}</h2>
+        </div>
+
+        <div class="flex gap-2">
+            <button onclick="window.location.reload()" class="btn btn-outline">
+                <i class="fas fa-sync-alt"></i> Refresh
+            </button>
+            <a href="{% url 'webapp:group_test_detail' group_test.id %}" class="btn btn-ghost">
+                <i class="fas fa-arrow-left mr-2"></i>Back
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Overview -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="stats shadow bg-primary text-primary-content">
+            <div class="stat p-4">
+                <div class="stat-title text-primary-content/80 text-xs">Total Attempts</div>
+                <div class="stat-value text-2xl">{{ results|length }}</div>
+            </div>
+        </div>
+
+        {% if results %}
+        <div class="stats shadow bg-success text-success-content">
+            <div class="stat p-4">
+                <div class="stat-title text-success-content/80 text-xs">Avg Group Score</div>
+                <div class="stat-value text-2xl">
+                    {% widthratio results|length|add:0 1 1 %}%
+                </div>
+            </div>
+        </div>
+
+        <div class="stats shadow bg-info text-info-content">
+            <div class="stat p-4">
+                <div class="stat-title text-info-content/80 text-xs">Total Students</div>
+                <div class="stat-value text-2xl">
+                    {% for result in results %}{{ result.members|length }}{% if not forloop.last %}+{% endif %}{% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="stats shadow bg-warning text-warning-content">
+            <div class="stat p-4">
+                <div class="stat-title text-warning-content/80 text-xs">Questions</div>
+                <div class="stat-value text-2xl">{{ group_test.test.questions.count }}</div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if results %}
+    <!-- Results List -->
+    <div class="space-y-4">
+        {% for result in results %}
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body">
+                <!-- Attempt Header -->
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <h3 class="text-xl font-bold">
+                            <span class="badge badge-primary mr-2">Attempt #{{ forloop.counter }}</span>
+                            {{ result.date|date:"M d, Y - H:i" }}
+                        </h3>
+                        <div class="text-sm text-base-content/70 mt-1">
+                            <i class="fas fa-users mr-1"></i>
+                            {{ result.members|length }} students
+                            {% if result.time_taken %}
+                            | <i class="fas fa-clock mr-1"></i>
+                            {{ result.time_taken|floatformat:0 }}s
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Group Score Badge -->
+                    <div class="stats shadow bg-gradient-to-r
+                        {% if result.group_score >= 80 %}from-success to-green-500
+                        {% elif result.group_score >= 60 %}from-warning to-orange-500
+                        {% else %}from-error to-red-500{% endif %} text-white">
+                        <div class="stat p-4">
+                            <div class="stat-title text-white/80 text-xs">Group Score</div>
+                            <div class="stat-value text-3xl">{{ result.group_score }}%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Students Table -->
+                <div class="overflow-x-auto">
+                    <table class="table table-zebra">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Student Name</th>
+                                <th>Email</th>
+                                <th class="text-center">Individual Score</th>
+                                <th class="text-center">Performance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for member in result.members %}
+                            <tr>
+                                <td class="font-bold">{{ forloop.counter }}</td>
+                                <td>
+                                    <div class="flex items-center gap-2">
+                                        <div class="avatar placeholder">
+                                            <div class="w-8 rounded-full bg-primary text-primary-content">
+                                                <span class="text-xs">{{ member.name.0 }}</span>
+                                            </div>
+                                        </div>
+                                        <span class="font-semibold">{{ member.name }}</span>
+                                    </div>
+                                </td>
+                                <td class="text-sm opacity-70">{{ member.email }}</td>
+                                <td class="text-center">
+                                    <div class="badge badge-lg
+                                        {% if member.individual_score >= 80 %}badge-success
+                                        {% elif member.individual_score >= 60 %}badge-warning
+                                        {% else %}badge-error{% endif %}">
+                                        {{ member.individual_score }}%
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    {% if member.individual_score >= 90 %}
+                                        <span class="text-success">⭐ Excellent</span>
+                                    {% elif member.individual_score >= 80 %}
+                                        <span class="text-success">✅ Great</span>
+                                    {% elif member.individual_score >= 70 %}
+                                        <span class="text-info">👍 Good</span>
+                                    {% elif member.individual_score >= 60 %}
+                                        <span class="text-warning">📚 Fair</span>
+                                    {% else %}
+                                        <span class="text-error">⚠️ Needs Work</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body text-center py-20">
+            <i class="fas fa-inbox text-6xl text-base-300 mb-4"></i>
+            <p class="text-xl mb-2">No attempts yet</p>
+            <p class="text-base-content/70 mb-6">Students haven't taken this group test yet.</p>
+            <button onclick="shareModal.showModal()" class="btn btn-primary btn-lg">
+                <i class="fas fa-share-alt mr-2"></i>
+                Share Test Link
+            </button>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,506 @@
+{% extends 'base.html' %}
+
+{% block title %}My Tests - CLD{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <!-- Header -->
+    <div class="flex justify-between items-center">
+        <div>
+            <h1 class="text-3xl font-bold">My Tests</h1>
+            <p class="text-base-content/70 mt-1">Manage your tests and group activities</p>
+        </div>
+
+        <div class="dropdown dropdown-end">
+            <label tabindex="0" class="btn btn-primary btn-lg">
+                <i class="fas fa-plus-circle mr-2"></i>
+                Create New Test
+                <i class="fas fa-chevron-down ml-2"></i>
+            </label>
+            <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow-xl bg-base-100 rounded-box w-64 mt-2">
+                <li class="menu-title">
+                    <span>Choose Type:</span>
+                </li>
+                <li>
+                    <a href="{% url 'webapp:create_test_ai' %}" class="flex items-start gap-3 p-3">
+                        <i class="fas fa-robot text-primary text-xl"></i>
+                        <div>
+                            <div class="font-bold">AI Generated</div>
+                            <div class="text-xs opacity-70">Fast, smart questions</div>
+                        </div>
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'webapp:create_test_manual' %}" class="flex items-start gap-3 p-3">
+                        <i class="fas fa-pen text-secondary text-xl"></i>
+                        <div>
+                            <div class="font-bold">Manual Input</div>
+                            <div class="text-xs opacity-70">Paste your questions</div>
+                        </div>
+                    </a>
+                </li>
+                <li class="divider"></li>
+                <li>
+                    <a href="{% url 'webapp:create_group_test' %}" class="flex items-start gap-3 p-3">
+                        <i class="fas fa-users text-success text-xl"></i>
+                        <div>
+                            <div class="font-bold">Group Test</div>
+                            <div class="text-xs opacity-70">Collaborative learning</div>
+                        </div>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="stats shadow">
+            <div class="stat p-4">
+                <div class="stat-title text-xs">Regular Tests</div>
+                <div class="stat-value text-2xl text-primary">{{ tests.count }}</div>
+            </div>
+        </div>
+        <div class="stats shadow">
+            <div class="stat p-4">
+                <div class="stat-title text-xs">Group Tests</div>
+                <div class="stat-value text-2xl text-success">{{ group_tests.count }}</div>
+            </div>
+        </div>
+        <div class="stats shadow">
+            <div class="stat p-4">
+                <div class="stat-title text-xs">Total Questions</div>
+                <div class="stat-value text-2xl text-info">
+                    {% widthratio tests.count 1 10 %}
+                </div>
+            </div>
+        </div>
+        <div class="stats shadow">
+            <div class="stat p-4">
+                <div class="stat-title text-xs">Published</div>
+                <div class="stat-value text-2xl text-warning">{{ tests.count }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs tabs-boxed bg-base-100 shadow-lg" x-data="{ activeTab: 'regular' }">
+        <a
+                class="tab tab-lg"
+                :class="{ 'tab-active': activeTab === 'regular' }"
+                @click="activeTab = 'regular'">
+            <i class="fas fa-clipboard-list mr-2"></i>
+            Regular Tests ({{ tests.count }})
+        </a>
+        <a
+                class="tab tab-lg"
+                :class="{ 'tab-active': activeTab === 'group' }"
+                @click="activeTab = 'group'">
+            <i class="fas fa-users mr-2"></i>
+            Group Tests ({{ group_tests.count }})
+        </a>
+    </div>
+
+    <!-- Regular Tests Tab -->
+    <div x-show="activeTab === 'regular'" x-cloak>
+        {% if tests %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for test in tests %}
+            <div class="card bg-base-100 shadow-xl hover:shadow-2xl transition-all cursor-pointer"
+                 onclick="window.location='{% url 'webapp:test_detail' test.id %}'">
+                <div class="card-body">
+                    <!-- Header -->
+                    <div class="flex justify-between items-start mb-2">
+                        <h3 class="card-title text-lg flex-1 line-clamp-2">
+                            {{ test.title }}
+                        </h3>
+                        {% if test.creation_method == 'ai' %}
+                        <span class="badge badge-primary badge-sm">
+                            <i class="fas fa-robot"></i>
+                        </span>
+                        {% else %}
+                        <span class="badge badge-secondary badge-sm">
+                            <i class="fas fa-pen"></i>
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Description -->
+                    <p class="text-sm text-base-content/70 line-clamp-2 mb-3">
+                        {{ test.description|default:"No description"|truncatewords:12 }}
+                    </p>
+
+                    <!-- Tags -->
+                    <div class="flex flex-wrap gap-2 mb-3">
+                        <span class="badge badge-outline badge-sm">
+                            <i class="fas fa-tag mr-1"></i>
+                            {{ test.topic|default:"General" }}
+                        </span>
+                        <span class="badge badge-primary badge-sm">
+                            {{ test.question_count }} Questions
+                        </span>
+                        {% if test.difficulty %}
+                        <span class="badge badge-outline badge-sm capitalize">
+                            {{ test.difficulty }}
+                        </span>
+                        {% endif %}
+                        {% if test.timer_minutes %}
+                        <span class="badge badge-warning badge-sm">
+                            <i class="fas fa-clock mr-1"></i>
+                            {{ test.timer_minutes }}m
+                        </span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Date -->
+                    <div class="text-xs text-base-content/60 mb-4">
+                        <i class="fas fa-calendar mr-1"></i>
+                        {{ test.created_at|date:"M d, Y" }}
+                    </div>
+
+                    <div class="divider my-2"></div>
+
+                    <!-- Actions -->
+                    <div class="card-actions justify-between items-center">
+                        {% if test.assignments.count > 0 %}
+                        <button
+                                onclick="event.stopPropagation(); openShareModal{{ test.id }}()"
+                                class="btn btn-success btn-sm">
+                            <i class="fas fa-share-alt"></i>
+                            Share
+                        </button>
+                        {% else %}
+
+                        href="{% url 'webapp:publish_test' test.id %}"
+                        onclick="event.stopPropagation()"
+                        class="btn btn-success btn-sm">
+                        <i class="fas fa-rocket"></i>
+                        Publish
+                        </a>
+                        {% endif %}
+
+                        <div class="flex gap-1">
+
+                            href="{% url 'webapp:test_results' test.id %}"
+                            onclick="event.stopPropagation()"
+                            class="btn btn-ghost btn-sm">
+                            <i class="fas fa-chart-bar"></i>
+                            </a>
+
+                            href="{% url 'webapp:test_detail' test.id %}"
+                            onclick="event.stopPropagation()"
+                            class="btn btn-ghost btn-sm">
+                            <i class="fas fa-eye"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Share Modal (same as before) -->
+            {% if test.assignments.exists %}
+            {% with assignment=test.assignments.first %}
+            <dialog id="shareModal{{ test.id }}" class="modal">
+                <div class="modal-box max-w-md">
+                    <h3 class="font-bold text-xl mb-4">
+                        <i class="fas fa-share-nodes text-success"></i>
+                        Share: {{ test.title }}
+                    </h3>
+
+                    <div class="flex justify-center mb-4">
+                        <div id="qrcode{{ test.id }}" class="bg-white p-4 rounded-lg"></div>
+                    </div>
+
+                    <div class="form-control mb-4">
+                        <div class="join w-full">
+                            <input
+                                    type="text"
+                                    id="link{{ test.id }}"
+                                    value="{{ request.scheme }}://{{ request.get_host }}{% url 'webapp:take_test' assignment.access_token %}"
+                                    class="input input-bordered join-item w-full text-sm font-mono"
+                                    readonly
+                            />
+                            <button onclick="copyLink{{ test.id }}()" class="btn btn-success join-item">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-success">
+                        <i class="fas fa-key"></i>
+                        <div>
+                            <div class="font-semibold text-sm">Access Code</div>
+                            <div class="font-mono text-lg">{{ assignment.access_token }}</div>
+                        </div>
+                    </div>
+
+                    <div class="modal-action">
+                        <form method="dialog">
+                            <button class="btn">Close</button>
+                        </form>
+                    </div>
+                </div>
+                <form method="dialog" class="modal-backdrop">
+                    <button>close</button>
+                </form>
+            </dialog>
+
+            <script>
+                function openShareModal {
+                    {
+                        test.id
+                    }
+                }
+
+                ()
+                {
+                    const modal = document.getElementById('shareModal{{ test.id }}');
+                    modal.showModal();
+
+                    const qr = document.getElementById('qrcode{{ test.id }}');
+                    if (qr.innerHTML === '') {
+                        new QRCode(qr, {
+                            text: "{{ request.scheme }}://{{ request.get_host }}{% url 'webapp:take_test' assignment.access_token %}",
+                            width: 180,
+                            height: 180,
+                        });
+                    }
+                }
+
+                function copyLink {
+                    {
+                        test.id
+                    }
+                }
+
+                ()
+                {
+                    const input = document.getElementById('link{{ test.id }}');
+                    input.select();
+                    document.execCommand('copy');
+
+                    const btn = event.target.closest('button');
+                    const orig = btn.innerHTML;
+                    btn.innerHTML = '<i class="fas fa-check"></i>';
+                    setTimeout(() => btn.innerHTML = orig, 1500);
+                }
+            </script>
+            {% endwith %}
+            {% endif %}
+            {% endfor %}
+        </div>
+        {% else %}
+        <!-- Empty State -->
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body text-center py-20">
+                <i class="fas fa-inbox text-6xl text-base-300 mb-4"></i>
+                <p class="text-xl mb-4">No regular tests yet</p>
+                <p class="text-base-content/70 mb-6">Create your first test to get started!</p>
+                <a href="{% url 'webapp:create_test_choice' %}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-plus-circle mr-2"></i>
+                    Create Test
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Group Tests Tab -->
+    <div x-show="activeTab === 'group'" x-cloak>
+        {% if group_tests %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for group_test in group_tests %}
+            <div class="card bg-gradient-to-br from-success/10 to-green-100 border-2 border-success shadow-xl hover:shadow-2xl transition-all cursor-pointer"
+                 onclick="window.location='{% url 'webapp:group_test_detail' group_test.id %}'">
+                <div class="card-body">
+                    <!-- Header -->
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <div class="badge badge-success badge-lg mb-2">
+                                <i class="fas fa-users mr-1"></i>
+                                Group-{{ group_test.group_number }}
+                            </div>
+                            <h3 class="card-title text-lg line-clamp-2">
+                                {{ group_test.test.title }}
+                            </h3>
+                        </div>
+                        <div class="badge badge-success">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <p class="text-sm text-base-content/70 line-clamp-2 mb-3">
+                        {{ group_test.test.description|default:"Collaborative group test"|truncatewords:12 }}
+                    </p>
+
+                    <!-- Tags -->
+                    <div class="flex flex-wrap gap-2 mb-3">
+                        <span class="badge badge-outline badge-sm">
+                            <i class="fas fa-question-circle mr-1"></i>
+                            {{ group_test.test.questions.count }} Questions
+                        </span>
+                        <span class="badge badge-warning badge-sm">
+                            <i class="fas fa-clock mr-1"></i>
+                            {{ group_test.timer_minutes }}m
+                        </span>
+                        <span class="badge badge-info badge-sm">
+                            <i class="fas fa-users mr-1"></i>
+                            Max {{ group_test.max_group_size }}
+                        </span>
+                    </div>
+
+                    <!-- Stats -->
+                    <div class="stats stats-vertical bg-white/50 shadow mb-3">
+                        <div class="stat py-2 px-3">
+                            <div class="stat-title text-xs">Attempts</div>
+                            <div class="stat-value text-lg text-success">{{ group_test.attempts.count }}</div>
+                        </div>
+                    </div>
+
+                    <div class="divider my-2"></div>
+
+                    <!-- Actions -->
+                    <div class="card-actions justify-between items-center">
+                        <button
+                                onclick="event.stopPropagation(); openGroupShareModal{{ group_test.id }}()"
+                                class="btn btn-success btn-sm">
+                            <i class="fas fa-share-alt"></i>
+                            Share
+                        </button>
+
+                        <div class="flex gap-1">
+
+                            href="{% url 'webapp:group_test_results' group_test.id %}"
+                            onclick="event.stopPropagation()"
+                            class="btn btn-ghost btn-sm">
+                            <i class="fas fa-chart-bar"></i>
+                            </a>
+
+                            href="{% url 'webapp:group_test_detail' group_test.id %}"
+                            onclick="event.stopPropagation()"
+                            class="btn btn-ghost btn-sm">
+                            <i class="fas fa-eye"></i>
+                            </a>
+                            <button
+                                    onclick="event.stopPropagation(); openGroupDeleteModal{{ group_test.id }}()"
+                                    class="btn btn-ghost btn-sm text-error">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Group Share Modal -->
+            <dialog id="groupShareModal{{ group_test.id }}" class="modal">
+                <div class="modal-box max-w-md">
+                    <h3 class="font-bold text-xl mb-4">
+                        <i class="fas fa-share-nodes text-success"></i>
+                        Share: Group-{{ group_test.group_number }}
+                    </h3>
+
+                    <div class="flex justify-center mb-4">
+                        <div id="groupQrcode{{ group_test.id }}" class="bg-white p-4 rounded-lg"></div>
+                    </div>
+
+                    <div class="form-control mb-4">
+                        <div class="join w-full">
+                            <input
+                                    type="text"
+                                    id="groupLink{{ group_test.id }}"
+                                    value="{{ request.scheme }}://{{ request.get_host }}{% url 'webapp:take_group_test' group_test.access_token %}"
+                                    class="input input-bordered join-item w-full text-sm font-mono"
+                                    readonly
+                            />
+                            <button onclick="copyGroupLink{{ group_test.id }}()" class="btn btn-success join-item">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-success">
+                        <i class="fas fa-key"></i>
+                        <div>
+                            <div class="font-semibold text-sm">Access Code</div>
+                            <div class="font-mono text-lg">{{ group_test.access_token }}</div>
+                        </div>
+                    </div>
+
+                    <div class="modal-action">
+                        <form method="dialog">
+                            <button class="btn">Close</button>
+                        </form>
+                    </div>
+                </div>
+                <form method="dialog" class="modal-backdrop">
+                    <button>close</button>
+                </form>
+            </dialog>
+
+            <script>
+                function openGroupShareModal {
+                    {
+                        group_test.id
+                    }
+                }
+
+                ()
+                {
+                    const modal = document.getElementById('groupShareModal{{ group_test.id }}');
+                    modal.showModal();
+
+                    const qr = document.getElementById('groupQrcode{{ group_test.id }}');
+                    if (qr.innerHTML === '') {
+                        new QRCode(qr, {
+                            text: "{{ request.scheme }}://{{ request.get_host }}{% url 'webapp:take_group_test' group_test.access_token %}",
+                            width: 180,
+                            height: 180,
+                        });
+                    }
+                }
+
+                function copyGroupLink {
+                    {
+                        group_test.id
+                    }
+                }
+
+                ()
+                {
+                    const input = document.getElementById('groupLink{{ group_test.id }}');
+                    input.select();
+                    document.execCommand('copy');
+
+                    const btn = event.target.closest('button');
+                    const orig = btn.innerHTML;
+                    btn.innerHTML = '<i class="fas fa-check"></i>';
+                    setTimeout(() => btn.innerHTML = orig, 1500);
+                }
+            </script>
+
+            {% endfor %}
+        </div>
+        {% else %}
+        <!-- Empty State -->
+        <div class="card bg-base-100 shadow-xl">
+            <div class="card-body text-center py-20">
+                <i class="fas fa-users text-6xl text-base-300 mb-4"></i>
+                <p class="text-xl mb-4">No group tests yet</p>
+                <p class="text-base-content/70 mb-6">Create your first group test for collaborative learning!</p>
+                <a href="{% url 'webapp:create_group_test' %}" class="btn btn-success btn-lg">
+                    <i class="fas fa-users mr-2"></i>
+                    Create Group Test
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+    [x-cloak] {
+        display: none !important;
+    }
+</style>
+{% endblock %}

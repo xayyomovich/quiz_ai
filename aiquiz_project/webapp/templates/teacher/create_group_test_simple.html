@@ -1,0 +1,302 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Group Test - CLD{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold mb-2">
+            <i class="fas fa-users text-success"></i>
+            Create Group Test
+        </h1>
+        <p class="text-base-content/70">Collaborative discussion questions for teams</p>
+    </div>
+
+    <!-- Info Banner -->
+    <div class="alert alert-info mb-6">
+        <i class="fas fa-lightbulb text-2xl"></i>
+        <div>
+            <h3 class="font-bold text-lg">Group Tests are Discussion-Based!</h3>
+            <ul class="text-sm space-y-1 mt-2">
+                <li>✅ Students discuss open-ended questions together</li>
+                <li>✅ Each student writes their individual thinking</li>
+                <li>✅ Team submits ONE final text answer</li>
+                <li>✅ AI grades both group + individual contributions fairly</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- LEFT SIDEBAR: Instructions -->
+        <div class="lg:col-span-1">
+            <div class="card bg-base-100 shadow-xl sticky top-20">
+                <div class="card-body">
+                    <h3 class="card-title">
+                        <i class="fas fa-book text-primary"></i>
+                        Format Guide
+                    </h3>
+
+                    <div class="divider"></div>
+
+                    <h4 class="font-bold mb-2 text-sm">📝 How to Format:</h4>
+                    <div class="text-xs mb-4 bg-base-200 p-3 rounded font-mono leading-relaxed">
+Q1: Your question here?<br>
+A1: Expected answer here.<br>
+<br>
+Q2: Another question?<br>
+A2: Expected answer.<br>
+                    </div>
+
+                    <h4 class="font-bold mb-2 text-sm">💡 Example:</h4>
+                    <div class="text-xs mb-4 bg-base-200 p-3 rounded font-mono leading-relaxed">
+Q1: A coin has a head and tail but no body. What is it and why?<br>
+A1: A coin. It has a head (one side) and tail (other side), but no body. People flip coins for luck.<br>
+<br>
+Q2: If you take 2 apples from 3, how many do YOU have?<br>
+A2: You have 2 apples because you took them. The question asks how many YOU have.
+                    </div>
+
+                    <div class="alert alert-warning text-xs">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span>Match Q numbers with A numbers!</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT SIDE: Form -->
+        <div class="lg:col-span-2">
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+
+                <!-- Error Messages -->
+                {% if form.non_field_errors %}
+                <div class="alert alert-error">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span>{{ form.non_field_errors }}</span>
+                </div>
+                {% endif %}
+
+                <!-- CARD 1: Basic Settings -->
+                <div class="card bg-base-100 shadow-xl">
+                    <div class="card-body">
+                        <h3 class="card-title mb-4">
+                            <i class="fas fa-cog text-primary"></i>
+                            Step 1: Basic Settings
+                        </h3>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                            <!-- Group Number -->
+                            <div class="form-control">
+                                <label class="label">
+                                    <span class="label-text font-bold">
+                                        <i class="fas fa-hashtag text-success"></i>
+                                        Group Number
+                                    </span>
+                                </label>
+                                <select name="group_number" class="select select-bordered w-full" required>
+                                    <option value="">Choose Group...</option>
+                                    <option value="1">Group-1</option>
+                                    <option value="2">Group-2</option>
+                                    <option value="3">Group-3</option>
+                                    <option value="4">Group-4</option>
+                                    <option value="5">Group-5</option>
+                                    <option value="6">Group-6</option>
+                                    <option value="7">Group-7</option>
+                                    <option value="8">Group-8</option>
+                                    <option value="9">Group-9</option>
+                                    <option value="10">Group-10</option>
+                                </select>
+                                <label class="label">
+                                    <span class="label-text-alt">
+                                        <i class="fas fa-info-circle"></i>
+                                        Select which group slot (1-10)
+                                    </span>
+                                </label>
+                            </div>
+
+                            <!-- Title -->
+                            <div class="form-control">
+                                <label class="label">
+                                    <span class="label-text font-bold">
+                                        <i class="fas fa-heading text-primary"></i>
+                                        Test Title
+                                    </span>
+                                </label>
+                                <input
+                                    type="text"
+                                    name="title"
+                                    placeholder="e.g., Critical Thinking Challenge"
+                                    class="input input-bordered w-full"
+                                    required
+                                />
+                                <label class="label">
+                                    <span class="label-text-alt">
+                                        <i class="fas fa-info-circle"></i>
+                                        Give your group test a name
+                                    </span>
+                                </label>
+                            </div>
+
+                            <!-- Timer -->
+                            <div class="form-control">
+                                <label class="label">
+                                    <span class="label-text font-bold">
+                                        <i class="fas fa-clock text-warning"></i>
+                                        Time Limit (minutes)
+                                    </span>
+                                </label>
+                                <input
+                                    type="number"
+                                    name="timer_minutes"
+                                    value="20"
+                                    min="5"
+                                    max="180"
+                                    class="input input-bordered w-full"
+                                    required
+                                />
+                                <label class="label">
+                                    <span class="label-text-alt">
+                                        <i class="fas fa-info-circle"></i>
+                                        How long students have to complete
+                                    </span>
+                                </label>
+                            </div>
+
+                            <!-- Max Group Size -->
+                            <div class="form-control">
+                                <label class="label">
+                                    <span class="label-text font-bold">
+                                        <i class="fas fa-users text-info"></i>
+                                        Max Students
+                                    </span>
+                                </label>
+                                <input
+                                    type="number"
+                                    name="max_group_size"
+                                    value="6"
+                                    min="2"
+                                    max="20"
+                                    class="input input-bordered w-full"
+                                    required
+                                />
+                                <label class="label">
+                                    <span class="label-text-alt">
+                                        <i class="fas fa-info-circle"></i>
+                                        Maximum students allowed in this group
+                                    </span>
+                                </label>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CARD 2: Questions and Answers -->
+                <div class="card bg-base-100 shadow-xl">
+                    <div class="card-body">
+                        <h3 class="card-title mb-4">
+                            <i class="fas fa-edit text-success"></i>
+                            Step 2: Questions and Answers
+                        </h3>
+
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-bold text-lg">
+                                    Paste Your Questions and Answers
+                                </span>
+                            </label>
+
+                            <textarea
+                                name="questions_and_answers"
+                                class="textarea textarea-bordered w-full font-mono text-sm"
+                                rows="20"
+                                placeholder="Q1: A girl finds a note in her room. It says: 'I have a head and a tail, but no body. I am not alive. People flip me for luck. What am I?' Solve the riddle and explain why it fits.
+A1: The riddle is about a coin. A coin has a head (one side) and a tail (other side), but no body. It's not alive. People flip coins for luck.
+
+Q2: If you have 3 apples and you take away 2, how many do you have? Explain your reasoning.
+A2: You have 2 apples because you took them away. The question asks how many YOU have, not how many are left.
+
+Q3: What gets wetter the more it dries? Explain your answer.
+A3: A towel. When you dry yourself or something, the towel absorbs water and gets wetter."
+                                required></textarea>
+
+                            <label class="label">
+                                <span class="label-text-alt">
+                                    <i class="fas fa-lightbulb"></i>
+                                    Format: Q1: question, A1: answer, Q2: question, A2: answer...
+                                </span>
+                            </label>
+                        </div>
+
+                        <div class="alert alert-info text-sm">
+                            <i class="fas fa-magic"></i>
+                            <span>These questions should encourage discussion and critical thinking!</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CARD 3: Features Preview -->
+                <div class="card bg-gradient-to-br from-success/10 to-green-100 border-2 border-success">
+                    <div class="card-body">
+                        <h4 class="font-bold text-lg mb-3">
+                            <i class="fas fa-star text-success"></i>
+                            What Makes Group Tests Special?
+                        </h4>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="flex items-start gap-3">
+                                <i class="fas fa-comments text-success text-2xl"></i>
+                                <div>
+                                    <strong>Team Discussion</strong>
+                                    <p class="text-sm opacity-70">Students collaborate and share ideas</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start gap-3">
+                                <i class="fas fa-brain text-success text-2xl"></i>
+                                <div>
+                                    <strong>Individual Thinking</strong>
+                                    <p class="text-sm opacity-70">Each student writes their own opinion</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start gap-3">
+                                <i class="fas fa-robot text-success text-2xl"></i>
+                                <div>
+                                    <strong>AI Grading</strong>
+                                    <p class="text-sm opacity-70">Context-aware, fair assessment</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start gap-3">
+                                <i class="fas fa-balance-scale text-success text-2xl"></i>
+                                <div>
+                                    <strong>Fair Scores</strong>
+                                    <p class="text-sm opacity-70">No free-riders - everyone graded individually</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex gap-4 justify-end">
+                    <a href="{% url 'webapp:test_list' %}" class="btn btn-ghost btn-lg">
+                        <i class="fas fa-times mr-2"></i>
+                        Cancel
+                    </a>
+                    <button type="submit" class="btn btn-success btn-lg">
+                        <i class="fas fa-plus-circle mr-2"></i>
+                        Create Group Test
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

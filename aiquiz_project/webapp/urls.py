@@ -42,4 +42,11 @@ urlpatterns = [
     path('rankings/', views.student_rankings_view, name='student_rankings'),
     path('progress/', views.student_progress_view, name='student_progress'),
 
+    # Teacher - Group Test Management
+    path('tests/create-group/', views.create_group_test_view, name='create_group_test'),
+    path('group-tests/<int:group_test_id>/', views.group_test_detail_view, name='group_test_detail'),
+    path('group-tests/<int:group_test_id>/results/', views.group_test_results_view, name='group_test_results'),
+    path('group-tests/<int:group_test_id>/delete/', views.delete_group_test_view, name='delete_group_test'),
+    path('group-test/<str:token>/', views.take_group_test_view, name='take_group_test'),
+
 ]

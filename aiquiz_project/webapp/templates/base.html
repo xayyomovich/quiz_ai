@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}AI QuizBot{% endblock %}</title>
+    <title>{% block title %}CLD - Collaborative Learning Development{% endblock %}</title>
 
     <!-- Tailwind CSS + DaisyUI -->
     <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.19/dist/full.min.css" rel="stylesheet" type="text/css" />
@@ -19,34 +19,214 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
     <style>
-        /* Custom styles if needed */
+        /* Custom styles */
         [x-cloak] { display: none !important; }
+
+        /* Beautiful gradient navbar */
+        .navbar-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        /* Logo animation */
+        @keyframes logoGlow {
+            0%, 100% { text-shadow: 0 0 10px rgba(255, 255, 255, 0.5); }
+            50% { text-shadow: 0 0 20px rgba(255, 255, 255, 0.8); }
+        }
+
+        .logo-text {
+            animation: logoGlow 3s ease-in-out infinite;
+        }
+
+        /* Smooth transitions */
+        .nav-link {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: white;
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+
+        .nav-link:hover::after {
+            width: 80%;
+        }
+
+        /* Avatar animation */
+        .avatar-pulse {
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.7); }
+            50% { box-shadow: 0 0 0 10px rgba(102, 126, 234, 0); }
+        }
+
+        /* Dropdown animation */
+        .dropdown-content {
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Toast notification animation */
+        .toast-notification {
+            animation: slideInRight 0.5s ease-out;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Footer gradient */
+        .footer-gradient {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        /* Glassmorphism effect */
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* Button hover effects */
+        .btn-gradient {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border: none;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .btn-gradient:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(245, 87, 108, 0.4);
+        }
+
+        /* Mobile menu animation */
+        .mobile-menu {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* Scroll indicator */
+        .scroll-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .scroll-to-top.show {
+            opacity: 1;
+        }
+
+        .scroll-to-top:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+        }
+
+        /* Badge animations */
+        .badge-pulse {
+            animation: badgePulse 2s ease-in-out infinite;
+        }
+
+        @keyframes badgePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        /* Menu item hover effect */
+        .menu-item-hover {
+            transition: all 0.3s ease;
+        }
+
+        .menu-item-hover:hover {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            transform: translateX(5px);
+        }
+
+        /* Container for landing page to allow full-width hero */
+        .main-content-wrapper {
+            width: 100%;
+        }
+
+        .main-content-wrapper.has-container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
     </style>
 
     {% block extra_head %}{% endblock %}
 </head>
-<body class="bg-base-200 min-h-screen">
+<body class="bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 min-h-screen">
 
     <!-- Navbar -->
-    <div class="navbar bg-base-100 shadow-lg sticky top-0 z-50">
+    <div class="navbar navbar-gradient text-white shadow-2xl sticky top-0 z-50">
         <div class="navbar-start">
-            <a href="{% if user.is_authenticated %}{% url 'webapp:dashboard' %}{% else %}{% url 'webapp:landing' %}{% endif %}" class="btn btn-ghost normal-case text-2xl font-black tracking-tighter">
-                CLD
+            <a href="{% if user.is_authenticated %}{% url 'webapp:dashboard' %}{% else %}{% url 'webapp:landing' %}{% endif %}"
+               class="btn btn-ghost normal-case text-3xl font-black tracking-tighter logo-text hover:scale-110 transition-transform duration-300">
+                <i class="fas fa-graduation-cap mr-2"></i>CLD
             </a>
         </div>
 
         {% if user.is_authenticated %}
         <div class="navbar-center hidden lg:flex">
             {% if user.role == 'teacher' %}
-            <ul class="menu menu-horizontal px-1">
-                <li><a href="{% url 'webapp:dashboard' %}"><i class="fas fa-home"></i> Dashboard</a></li>
-                <li><a href="{% url 'webapp:test_list' %}"><i class="fas fa-list"></i> My Tests</a></li>
-                <li><a href="{% url 'webapp:create_test' %}"><i class="fas fa-plus-circle"></i> Create Test</a></li>
+            <ul class="menu menu-horizontal px-1 text-white font-semibold">
+                <li><a href="{% url 'webapp:dashboard' %}" class="nav-link hover:bg-white/20 rounded-lg"><i class="fas fa-home mr-2"></i> Dashboard</a></li>
+                <li><a href="{% url 'webapp:test_list' %}" class="nav-link hover:bg-white/20 rounded-lg"><i class="fas fa-list mr-2"></i> My Tests</a></li>
+                <li><a href="{% url 'webapp:create_test' %}" class="nav-link hover:bg-white/20 rounded-lg"><i class="fas fa-plus-circle mr-2"></i> Create Test</a></li>
             </ul>
             {% else %}
-            <ul class="menu menu-horizontal px-1">
-                <li><a href="{% url 'webapp:dashboard' %}"><i class="fas fa-home"></i> Dashboard</a></li>
-                <li><a href="{% url 'webapp:student_history' %}"><i class="fas fa-history"></i> My Tests</a></li>
+            <ul class="menu menu-horizontal px-1 text-white font-semibold">
+                <li><a href="{% url 'webapp:dashboard' %}" class="nav-link hover:bg-white/20 rounded-lg"><i class="fas fa-home mr-2"></i> Dashboard</a></li>
+                <li><a href="{% url 'webapp:student_history' %}" class="nav-link hover:bg-white/20 rounded-lg"><i class="fas fa-history mr-2"></i> My Tests</a></li>
             </ul>
             {% endif %}
         </div>
@@ -54,35 +234,37 @@
         <div class="navbar-end">
             <!-- User dropdown -->
             <div class="dropdown dropdown-end">
-                <label tabindex="0" class="btn btn-ghost btn-circle avatar">
-                    <div class="w-10 rounded-full bg-primary text-primary-content flex items-center justify-center">
-                        <span class="text-lg font-bold">{{ user.first_name.0|upper }}</span>
+                <label tabindex="0" class="btn btn-ghost btn-circle avatar avatar-pulse">
+                    <div class="w-11 rounded-full bg-white text-purple-600 flex items-center justify-center ring-2 ring-white/50">
+                        <span class="text-lg font-black">{{ user.first_name.0|upper }}</span>
                     </div>
                 </label>
-                <ul tabindex="0" class="mt-3 z-[1] p-2 shadow menu menu-sm dropdown-content bg-base-100 rounded-box w-52">
-                    <li class="menu-title">
-                        <span>{{ user.get_full_name }}</span>
-                        <span class="badge badge-sm badge-primary">{{ user.role|title }}</span>
+                <ul tabindex="0" class="dropdown-content mt-3 z-[1] p-3 shadow-2xl menu menu-sm bg-white rounded-2xl w-64 border-2 border-purple-100">
+                    <li class="menu-title p-4 bg-gradient-to-r from-purple-100 to-blue-100 rounded-xl mb-2">
+                        <div class="flex flex-col">
+                            <span class="text-lg font-bold text-gray-800">{{ user.get_full_name }}</span>
+                            <span class="badge badge-primary badge-pulse mt-1">{{ user.role|title }}</span>
+                        </div>
                     </li>
-                    <li><a href="#"><i class="fas fa-user"></i> Profile</a></li>
-                    <li><a href="#"><i class="fas fa-cog"></i> Settings</a></li>
-                    <li><a href="{% url 'webapp:logout' %}"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                    <li class="menu-item-hover"><a href="#" class="text-gray-700 font-medium"><i class="fas fa-user text-purple-600 mr-2"></i> Profile</a></li>
+                    <li class="menu-item-hover"><a href="#" class="text-gray-700 font-medium"><i class="fas fa-cog text-blue-600 mr-2"></i> Settings</a></li>
+                    <li class="mt-2"><a href="{% url 'webapp:logout' %}" class="text-red-600 font-bold hover:bg-red-50 rounded-lg"><i class="fas fa-sign-out-alt mr-2"></i> Logout</a></li>
                 </ul>
             </div>
 
             <!-- Mobile menu -->
             <div class="dropdown dropdown-end lg:hidden ml-2">
-                <label tabindex="0" class="btn btn-ghost btn-circle">
+                <label tabindex="0" class="btn btn-ghost btn-circle hover:bg-white/20">
                     <i class="fas fa-bars text-xl"></i>
                 </label>
-                <ul tabindex="0" class="menu menu-sm dropdown-content mt-3 z-[1] p-2 shadow bg-base-100 rounded-box w-52">
+                <ul tabindex="0" class="mobile-menu menu menu-sm dropdown-content mt-3 z-[1] p-3 shadow-2xl bg-white rounded-2xl w-64 border-2 border-purple-100">
                     {% if user.role == 'teacher' %}
-                    <li><a href="{% url 'webapp:dashboard' %}"><i class="fas fa-home"></i> Dashboard</a></li>
-                    <li><a href="{% url 'webapp:test_list' %}"><i class="fas fa-list"></i> My Tests</a></li>
-                    <li><a href="{% url 'webapp:create_test' %}"><i class="fas fa-plus-circle"></i> Create Test</a></li>
+                    <li class="menu-item-hover"><a href="{% url 'webapp:dashboard' %}" class="text-gray-700 font-medium"><i class="fas fa-home text-purple-600 mr-2"></i> Dashboard</a></li>
+                    <li class="menu-item-hover"><a href="{% url 'webapp:test_list' %}" class="text-gray-700 font-medium"><i class="fas fa-list text-blue-600 mr-2"></i> My Tests</a></li>
+                    <li class="menu-item-hover"><a href="{% url 'webapp:create_test' %}" class="text-gray-700 font-medium"><i class="fas fa-plus-circle text-green-600 mr-2"></i> Create Test</a></li>
                     {% else %}
-                    <li><a href="{% url 'webapp:dashboard' %}"><i class="fas fa-home"></i> Dashboard</a></li>
-                    <li><a href="{% url 'webapp:student_history' %}"><i class="fas fa-history"></i> My Tests</a></li>
+                    <li class="menu-item-hover"><a href="{% url 'webapp:dashboard' %}" class="text-gray-700 font-medium"><i class="fas fa-home text-purple-600 mr-2"></i> Dashboard</a></li>
+                    <li class="menu-item-hover"><a href="{% url 'webapp:student_history' %}" class="text-gray-700 font-medium"><i class="fas fa-history text-blue-600 mr-2"></i> My Tests</a></li>
                     {% endif %}
                 </ul>
             </div>
@@ -90,16 +272,20 @@
         {% else %}
         <!-- Landing Page Navbar (Not Authenticated) -->
         <div class="navbar-center hidden lg:flex">
-            <ul class="menu menu-horizontal px-1">
-                <li><a href="#features">Features</a></li>
-                <li><a href="#how-it-works">How It Works</a></li>
-                <li><a href="#faq">FAQ</a></li>
+            <ul class="menu menu-horizontal px-1 text-white font-semibold">
+                <li><a href="#features" class="nav-link hover:bg-white/20 rounded-lg">Features</a></li>
+                <li><a href="#how-it-works" class="nav-link hover:bg-white/20 rounded-lg">How It Works</a></li>
+                <li><a href="#faq" class="nav-link hover:bg-white/20 rounded-lg">FAQ</a></li>
             </ul>
         </div>
 
-        <div class="navbar-end">
-            <a href="{% url 'webapp:login' %}" class="btn btn-ghost">Login</a>
-            <a href="{% url 'webapp:register' %}" class="btn btn-primary ml-2">Sign Up</a>
+        <div class="navbar-end gap-2">
+            <a href="{% url 'webapp:login' %}" class="btn btn-ghost text-white hover:bg-white/20 font-semibold">
+                <i class="fas fa-sign-in-alt mr-2"></i>Login
+            </a>
+            <a href="{% url 'webapp:register' %}" class="btn btn-gradient font-bold shadow-lg">
+                <i class="fas fa-rocket mr-2"></i>Sign Up
+            </a>
         </div>
         {% endif %}
     </div>
@@ -108,9 +294,19 @@
     {% if messages %}
     <div class="toast toast-top toast-end z-50">
         {% for message in messages %}
-        <div class="alert {{ message.tags }} shadow-lg" x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)">
-            <div>
-                <span>{{ message }}</span>
+        <div class="alert toast-notification shadow-2xl rounded-2xl border-2 {{ message.tags }}"
+             x-data="{ show: true }"
+             x-show="show"
+             x-init="setTimeout(() => show = false, 5000)"
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0 transform translate-x-full"
+             x-transition:enter-end="opacity-100 transform translate-x-0"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100 transform translate-x-0"
+             x-transition:leave-end="opacity-0 transform translate-x-full">
+            <div class="flex items-center gap-3">
+                <i class="fas fa-check-circle text-2xl"></i>
+                <span class="font-semibold">{{ message }}</span>
             </div>
             <button @click="show = false" class="btn btn-sm btn-circle btn-ghost">✕</button>
         </div>
@@ -119,20 +315,133 @@
     {% endif %}
 
     <!-- Main Content -->
-    <main class="container mx-auto px-4 py-8 max-w-7xl">
+    <main class="main-content-wrapper {% if user.is_authenticated %}has-container{% endif %}">
         {% block content %}
         {% endblock %}
     </main>
 
+    <!-- Scroll to Top Button -->
+    <div class="scroll-to-top" id="scrollToTop">
+        <i class="fas fa-arrow-up text-xl"></i>
+    </div>
+
     <!-- Footer -->
-    <footer class="footer footer-center p-10 bg-base-100 text-base-content mt-20">
-        <aside>
-            <div class="text-4xl font-black tracking-tighter text-primary mb-2">CLD</div>
-            <p class="font-bold text-lg">Collaborative Learning Development</p>
-            <p>AI-powered platform for modern education</p>
-            <p>Copyright © 2025 - All rights reserved | cld.com.uz</p>
-        </aside>
+    <footer class="footer-gradient text-white mt-20">
+        <div class="container mx-auto px-8 py-12">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <!-- Brand Section -->
+                <div>
+                    <div class="flex items-center mb-4">
+                        <i class="fas fa-graduation-cap text-4xl mr-3"></i>
+                        <div class="text-4xl font-black tracking-tighter logo-text">CLD</div>
+                    </div>
+                    <p class="font-bold text-lg mb-2">Collaborative Learning Development</p>
+                    <p class="text-white/80 leading-relaxed">AI-powered platform for modern education</p>
+                </div>
+
+                <!-- Quick Links -->
+                <div>
+                    <h3 class="font-bold text-lg mb-4 flex items-center">
+                        <i class="fas fa-link mr-2"></i>Quick Links
+                    </h3>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="hover:text-pink-200 transition-colors flex items-center"><i class="fas fa-chevron-right mr-2 text-xs"></i>About Us</a></li>
+                        <li><a href="#features" class="hover:text-pink-200 transition-colors flex items-center"><i class="fas fa-chevron-right mr-2 text-xs"></i>Features</a></li>
+                        <li><a href="#how-it-works" class="hover:text-pink-200 transition-colors flex items-center"><i class="fas fa-chevron-right mr-2 text-xs"></i>How It Works</a></li>
+                        <li><a href="#faq" class="hover:text-pink-200 transition-colors flex items-center"><i class="fas fa-chevron-right mr-2 text-xs"></i>FAQ</a></li>
+                    </ul>
+                </div>
+
+                <!-- Support -->
+                <div>
+                    <h3 class="font-bold text-lg mb-4 flex items-center">
+                        <i class="fas fa-life-ring mr-2"></i>Support
+                    </h3>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="hover:text-pink-200 transition-colors flex items-center"><i class="fas fa-chevron-right mr-2 text-xs"></i>Help Center</a></li>
+                        <li><a href="#" class="hover:text-pink-200 transition-colors flex items-center"><i class="fas fa-chevron-right mr-2 text-xs"></i>Contact Us</a></li>
+                        <li><a href="#" class="hover:text-pink-200 transition-colors flex items-center"><i class="fas fa-chevron-right mr-2 text-xs"></i>Privacy Policy</a></li>
+                        <li><a href="#" class="hover:text-pink-200 transition-colors flex items-center"><i class="fas fa-chevron-right mr-2 text-xs"></i>Terms of Service</a></li>
+                    </ul>
+                </div>
+
+                <!-- Connect -->
+                <div>
+                    <h3 class="font-bold text-lg mb-4 flex items-center">
+                        <i class="fas fa-share-alt mr-2"></i>Connect With Us
+                    </h3>
+                    <div class="flex gap-3 mb-4">
+                        <a href="#" class="w-12 h-12 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-all hover:scale-110">
+                            <i class="fab fa-facebook-f text-xl"></i>
+                        </a>
+                        <a href="#" class="w-12 h-12 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-all hover:scale-110">
+                            <i class="fab fa-twitter text-xl"></i>
+                        </a>
+                        <a href="#" class="w-12 h-12 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-all hover:scale-110">
+                            <i class="fab fa-instagram text-xl"></i>
+                        </a>
+                        <a href="#" class="w-12 h-12 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-all hover:scale-110">
+                            <i class="fab fa-linkedin-in text-xl"></i>
+                        </a>
+                    </div>
+                    <div class="text-white/80">
+                        <p class="flex items-center mb-2">
+                            <i class="fas fa-envelope mr-2"></i>
+                            info@cld.com.uz
+                        </p>
+                        <p class="flex items-center">
+                            <i class="fas fa-phone mr-2"></i>
+                            +998 90 123 45 67
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Bar -->
+            <div class="border-t border-white/20 mt-8 pt-8 text-center">
+                <p class="text-white/80">
+                    Copyright © 2025 - All rights reserved |
+                    <a href="https://cld.com.uz" class="hover:text-pink-200 font-bold transition-colors">cld.com.uz</a>
+                </p>
+                <p class="text-sm text-white/60 mt-2">
+                    Made with <i class="fas fa-heart text-pink-300"></i> for Education
+                </p>
+            </div>
+        </div>
     </footer>
+
+    <script>
+        // Scroll to top functionality
+        const scrollToTop = document.getElementById('scrollToTop');
+
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 300) {
+                scrollToTop.classList.add('show');
+            } else {
+                scrollToTop.classList.remove('show');
+            }
+        });
+
+        scrollToTop.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                const href = this.getAttribute('href');
+                if (href !== '#' && document.querySelector(href)) {
+                    e.preventDefault();
+                    document.querySelector(href).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+    </script>
 
     {% block extra_js %}{% endblock %}
 </body>

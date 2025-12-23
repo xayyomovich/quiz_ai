@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Group Test - CLD{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto">
+    <div class="mb-8">
+        <h1 class="text-3xl font-bold mb-2">
+            <i class="fas fa-users text-primary"></i>
+            Create Group Test
+        </h1>
+        <p class="text-base-content/70">Collaborative learning for teams of students</p>
+    </div>
+
+    <!-- Info Card -->
+    <div class="alert alert-info mb-6">
+        <i class="fas fa-info-circle text-2xl"></i>
+        <div>
+            <h3 class="font-bold">What is a Group Test?</h3>
+            <p class="text-sm">Students join as a team, discuss questions, write individual opinions, and submit one group answer. Each student gets scored individually based on their contribution!</p>
+        </div>
+    </div>
+
+    <!-- Form -->
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                <div class="alert alert-error mb-6">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span>{{ form.non_field_errors }}</span>
+                </div>
+                {% endif %}
+
+                <!-- Group Number -->
+                <div class="form-control mb-6">
+                    <label class="label">
+                        <span class="label-text font-bold text-lg">
+                            <i class="fas fa-hashtag text-primary"></i>
+                            Group Number (1-10)
+                        </span>
+                    </label>
+                    {{ form.group_number }}
+                    {% if form.group_number.errors %}
+                    <label class="label">
+                        <span class="label-text-alt text-error">{{ form.group_number.errors.0 }}</span>
+                    </label>
+                    {% endif %}
+                    <label class="label">
+                        <span class="label-text-alt">{{ form.group_number.help_text }}</span>
+                    </label>
+                </div>
+
+                <!-- Select Test -->
+                <div class="form-control mb-6">
+                    <label class="label">
+                        <span class="label-text font-bold text-lg">
+                            <i class="fas fa-clipboard-list text-primary"></i>
+                            Select Test
+                        </span>
+                    </label>
+                    {{ form.test }}
+                    {% if form.test.errors %}
+                    <label class="label">
+                        <span class="label-text-alt text-error">{{ form.test.errors.0 }}</span>
+                    </label>
+                    {% endif %}
+                    <label class="label">
+                        <span class="label-text-alt">{{ form.test.help_text }}</span>
+                    </label>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Timer -->
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text font-bold">
+                                <i class="fas fa-clock text-warning"></i>
+                                Time Limit (minutes)
+                            </span>
+                        </label>
+                        {{ form.timer_minutes }}
+                        {% if form.timer_minutes.errors %}
+                        <label class="label">
+                            <span class="label-text-alt text-error">{{ form.timer_minutes.errors.0 }}</span>
+                        </label>
+                        {% endif %}
+                        <label class="label">
+                            <span class="label-text-alt">{{ form.timer_minutes.help_text }}</span>
+                        </label>
+                    </div>
+
+                    <!-- Max Group Size -->
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text font-bold">
+                                <i class="fas fa-users text-success"></i>
+                                Max Students
+                            </span>
+                        </label>
+                        {{ form.max_group_size }}
+                        {% if form.max_group_size.errors %}
+                        <label class="label">
+                            <span class="label-text-alt text-error">{{ form.max_group_size.errors.0 }}</span>
+                        </label>
+                        {% endif %}
+                        <label class="label">
+                            <span class="label-text-alt">{{ form.max_group_size.help_text }}</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Features Info -->
+                <div class="divider"></div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-check-circle text-success text-xl mt-1"></i>
+                        <div>
+                            <strong>Individual Opinions</strong>
+                            <p class="text-sm opacity-70">Each student writes their thinking</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-check-circle text-success text-xl mt-1"></i>
+                        <div>
+                            <strong>Group Answer</strong>
+                            <p class="text-sm opacity-70">Team submits one final answer</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-check-circle text-success text-xl mt-1"></i>
+                        <div>
+                            <strong>AI Grading</strong>
+                            <p class="text-sm opacity-70">Grades group + individuals fairly</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-check-circle text-success text-xl mt-1"></i>
+                        <div>
+                            <strong>Fair Assessment</strong>
+                            <p class="text-sm opacity-70">No free-riders!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Buttons -->
+                <div class="card-actions justify-end mt-6">
+                    <a href="{% url 'webapp:test_list' %}" class="btn btn-ghost">
+                        <i class="fas fa-times mr-2"></i>
+                        Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="fas fa-plus-circle mr-2"></i>
+                        Create Group Test
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

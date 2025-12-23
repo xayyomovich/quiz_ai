@@ -1,0 +1,201 @@
+{% extends 'base.html' %}
+
+{% block title %}Group Test - {{ group_test.test.title }}{% endblock %}
+
+{% block content %}
+<div x-data="groupTestSystem()" x-init="init()">
+
+    <!-- Timer Bar (Sticky) -->
+    <div class="sticky top-0 z-50 bg-base-100 shadow-lg border-b-4 border-warning">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div>
+                <span class="badge badge-primary mr-2">Group-{{ group_test.group_number }}</span>
+                <span class="font-bold">{{ group_test.test.title }}</span>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <i class="fas fa-clock text-2xl text-warning"></i>
+                <div>
+                    <div class="text-xs opacity-70">Time Left</div>
+                    <div class="font-mono text-2xl font-bold" x-text="formatTime(timeRemaining)"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Team Members Bar -->
+    <div class="bg-base-200 shadow-sm mb-4">
+        <div class="container mx-auto px-4 py-3">
+            <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-sm font-semibold">Team:</span>
+                {% for member in members %}
+                <div class="badge badge-lg gap-2
+                    {% if member.has_submitted_all_opinions %}badge-success{% else %}badge-ghost{% endif %}">
+                    <i class="fas fa-user"></i>
+                    {{ member.student.first_name }}
+                    {% if member.has_submitted_all_opinions %}
+                    <i class="fas fa-check-circle"></i>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Questions -->
+    <!-- Question Display (Text Only) -->
+    <div class="bg-base-200 p-6 rounded-lg mb-6">
+        <div class="prose max-w-none">
+            <p class="text-lg leading-relaxed whitespace-pre-wrap">{{ question.question_text }}</p>
+        </div>
+    </div>
+
+    <div class="divider">Individual Work</div>
+
+    <!-- YOUR OPINION BOX -->
+    <div class="card bg-info/10 border-2 border-info">
+        <div class="card-body p-4">
+            <h4 class="font-bold text-lg mb-2">
+                <i class="fas fa-brain text-info"></i>
+                💭 Your Opinion (Required)
+            </h4>
+            <p class="text-sm opacity-70 mb-3">
+                Write your thinking. Explain your reasoning!
+            </p>
+
+            <form method="post" class="space-y-3">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="submit_opinion">
+                <input type="hidden" name="question_id" value="{{ question.id }}">
+
+                <textarea
+                        name="opinion_text"
+                        class="textarea textarea-bordered w-full h-32"
+                        placeholder="Write your thoughts here..."
+                        {% if question.id in user_opinions %}readonly{% endif %}
+                        required>{% if question.id in user_opinions %}{{ user_opinions|get_item:question.id }}{% endif %}</textarea>
+
+                {% if question.id in user_opinions %}
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Opinion submitted! ✅</span>
+                </div>
+                {% else %}
+                <button type="submit" class="btn btn-info btn-sm">
+                    <i class="fas fa-paper-plane mr-2"></i>
+                    Submit Opinion
+                </button>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+    <div class="divider">Team Decision</div>
+
+    <!-- GROUP ANSWER BOX -->
+    <div class="card bg-success/10 border-2 border-success">
+        <div class="card-body p-4">
+            <h4 class="font-bold text-lg mb-2">
+                <i class="fas fa-users text-success"></i>
+                👥 Group Answer (One person submits)
+            </h4>
+
+            {% if question.id in group_answers %}
+            <!-- Already answered -->
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle text-2xl"></i>
+                <div>
+                    <div class="font-bold">Group Answer Submitted!</div>
+                    <div class="text-sm">By {{ group_answers|get_item:question.id|get_item:'submitted_by' }}</div>
+                    <div class="mt-2 bg-white/30 p-3 rounded">
+                        <p class="text-sm">{{ group_answers|get_item:question.id|get_item:'text' }}</p>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <!-- Can submit -->
+            <p class="text-sm opacity-70 mb-3">
+                Discuss with your team, then one person submits the final answer.
+            </p>
+
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="submit_group_answer">
+                <input type="hidden" name="question_id" value="{{ question.id }}">
+
+                <textarea
+                        name="text_answer"
+                        class="textarea textarea-bordered textarea-success w-full h-32 mb-3"
+                        placeholder="Write your group's final answer here..."
+                        required></textarea>
+
+                <button type="submit" class="btn btn-success">
+                    <i class="fas fa-check mr-2"></i>
+                    Submit Group Answer
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Finish Button -->
+    {% if group_answers|length == questions|length %}
+    <div class="sticky bottom-4 mt-6">
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="finish_test">
+            <button type="submit" class="btn btn-error btn-lg w-full">
+                <i class="fas fa-flag-checkered mr-2"></i>
+                Finish Test & See Results
+            </button>
+        </form>
+    </div>
+    {% endif %}
+</div>
+</div>
+
+<script>
+    function groupTestSystem() {
+        return {
+            timeRemaining: {
+        {
+            time_remaining |
+        default:
+            0
+        }
+    },
+        timerInterval: null,
+
+            init()
+        {
+            if (this.timeRemaining > 0) {
+                this.startTimer();
+            }
+        }
+    ,
+
+        startTimer()
+        {
+            this.timerInterval = setInterval(() => {
+                this.timeRemaining--;
+
+                if (this.timeRemaining <= 0) {
+                    clearInterval(this.timerInterval);
+                    alert('⏰ Time is up! Submitting test...');
+                    document.querySelector('form[action*="finish_test"]')?.submit();
+                }
+            }, 1000);
+        }
+    ,
+
+        formatTime(seconds)
+        {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }
+    }
+    }
+</script>
+
+{% endblock %}

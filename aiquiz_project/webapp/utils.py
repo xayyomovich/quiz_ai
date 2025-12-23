@@ -220,5 +220,119 @@ D) Yurak urishi pasayishi"""
         print(format_parse_errors(questions))
 
 
+def parse_group_test_qa(qa_text: str) -> Tuple[List[Dict], str]:
+    """
+    Parse group test questions and answers in Q&A format
+
+    Format:
+    Q1: question text here
+    A1: answer text here
+    Q2: question text here
+    A2: answer text here
+
+    Returns: (questions_list, error_message)
+    """
+    import re
+
+    logger.info("Parsing group test Q&A format")
+
+    lines = qa_text.strip().split('\n')
+
+    questions = {}
+    current_q_num = None
+    current_type = None  # 'Q' or 'A'
+    current_text = []
+
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+
+        # Check for Q pattern (Q1:, Q2:, etc.)
+        q_match = re.match(r'^Q(\d+):\s*(.+)', line, re.IGNORECASE)
+        if q_match:
+            # Save previous content
+            if current_q_num and current_type and current_text:
+                text = ' '.join(current_text).strip()
+                if current_type == 'Q':
+                    questions[current_q_num]['question'] = text
+                elif current_type == 'A':
+                    questions[current_q_num]['answer'] = text
+
+            # Start new question
+            current_q_num = int(q_match.group(1))
+            current_type = 'Q'
+            current_text = [q_match.group(2)]
+
+            if current_q_num not in questions:
+                questions[current_q_num] = {'number': current_q_num}
+
+            continue
+
+        # Check for A pattern (A1:, A2:, etc.)
+        a_match = re.match(r'^A(\d+):\s*(.+)', line, re.IGNORECASE)
+        if a_match:
+            # Save previous content
+            if current_q_num and current_type and current_text:
+                text = ' '.join(current_text).strip()
+                if current_type == 'Q':
+                    questions[current_q_num]['question'] = text
+                elif current_type == 'A':
+                    questions[current_q_num]['answer'] = text
+
+            # Start answer for this question
+            answer_num = int(a_match.group(1))
+            current_q_num = answer_num
+            current_type = 'A'
+            current_text = [a_match.group(2)]
+
+            if current_q_num not in questions:
+                questions[current_q_num] = {'number': current_q_num}
+
+            continue
+
+        # Continuation of current Q or A
+        if current_type:
+            current_text.append(line)
+
+    # Save last content
+    if current_q_num and current_type and current_text:
+        text = ' '.join(current_text).strip()
+        if current_type == 'Q':
+            questions[current_q_num]['question'] = text
+        elif current_type == 'A':
+            questions[current_q_num]['answer'] = text
+
+    # Validate
+    result = []
+    errors = []
+
+    for num in sorted(questions.keys()):
+        q_data = questions[num]
+
+        if 'question' not in q_data or not q_data['question']:
+            errors.append(f"Q{num}: Missing question text")
+            continue
+
+        if 'answer' not in q_data or not q_data['answer']:
+            errors.append(f"Q{num}: Missing answer text")
+            continue
+
+        result.append({
+            'number': num,
+            'question_text': q_data['question'],
+            'expected_answer': q_data['answer']
+        })
+
+    if errors:
+        return [], '; '.join(errors)
+
+    if not result:
+        return [], "No questions found. Please check format: Q1: question, A1: answer"
+
+    logger.info(f"Parsed {len(result)} group test questions")
+    return result, ""
+
+
 if __name__ == "__main__":
     test_parser()

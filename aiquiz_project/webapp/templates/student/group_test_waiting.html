@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+
+{% block title %}Waiting Room - Group-{{ group_test.group_number }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto" x-data="waitingRoom()">
+    <!-- Header -->
+    <div class="card bg-gradient-to-br from-primary to-blue-600 text-white shadow-2xl mb-6">
+        <div class="card-body text-center">
+            <div class="badge badge-lg bg-white text-primary mb-2">
+                Group-{{ group_test.group_number }}
+            </div>
+            <h1 class="text-3xl font-bold mb-2">{{ group_test.test.title }}</h1>
+            <p class="text-lg opacity-90">{{ group_test.test.description }}</p>
+        </div>
+    </div>
+
+    <!-- Test Info -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div class="stats shadow">
+            <div class="stat p-4">
+                <div class="stat-title text-xs">Questions</div>
+                <div class="stat-value text-2xl text-primary">{{ group_test.test.questions.count }}</div>
+            </div>
+        </div>
+        <div class="stats shadow">
+            <div class="stat p-4">
+                <div class="stat-title text-xs">Time Limit</div>
+                <div class="stat-value text-2xl text-warning">{{ group_test.timer_minutes }}m</div>
+            </div>
+        </div>
+        <div class="stats shadow">
+            <div class="stat p-4">
+                <div class="stat-title text-xs">Max Students</div>
+                <div class="stat-value text-2xl text-info">{{ group_test.max_group_size }}</div>
+            </div>
+        </div>
+        <div class="stats shadow">
+            <div class="stat p-4">
+                <div class="stat-title text-xs">Joined</div>
+                <div class="stat-value text-2xl text-success">{{ current_size }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Instructions -->
+    <div class="alert alert-info mb-6">
+        <i class="fas fa-info-circle text-2xl"></i>
+        <div>
+            <h3 class="font-bold text-lg">How Group Tests Work:</h3>
+            <ul class="text-sm space-y-1 mt-2">
+                <li>✅ Wait for your team members to join</li>
+                <li>✅ Anyone can click "Start Test" when ready</li>
+                <li>✅ Each person writes their individual opinion</li>
+                <li>✅ Team submits ONE final answer together</li>
+                <li>✅ Everyone gets scored individually + group score</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Waiting Room Card -->
+    <div class="card bg-base-100 shadow-xl">
+        <div class="card-body">
+            <h2 class="card-title text-2xl mb-6">
+                <i class="fas fa-users text-primary"></i>
+                Waiting Room
+                <span class="loading loading-dots loading-md ml-2"></span>
+            </h2>
+
+            <!-- Members List -->
+            <div class="space-y-3 mb-6">
+                {% for member in members %}
+                <div class="flex items-center gap-4 p-4 bg-base-200 rounded-lg">
+                    <div class="avatar placeholder">
+                        <div class="w-12 rounded-full bg-primary text-primary-content">
+                            <span class="text-lg">{{ member.student.first_name.0 }}</span>
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <div class="font-bold">{{ member.student.get_full_name }}</div>
+                        <div class="text-sm opacity-70">
+                            {% if member.student == user %}
+                                <span class="badge badge-primary badge-sm">You</span>
+                            {% endif %}
+                            Joined {{ member.joined_at|timesince }} ago
+                        </div>
+                    </div>
+                    <i class="fas fa-check-circle text-success text-2xl"></i>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Status Message -->
+            <div class="text-center mb-6">
+                <p class="text-lg">
+                    <span class="font-bold text-primary">{{ current_size }}</span>
+                    / {{ group_test.max_group_size }} students joined
+                </p>
+                {% if current_size < 2 %}
+                <p class="text-sm opacity-70 mt-2">
+                    <i class="fas fa-hourglass-half mr-1"></i>
+                    Waiting for more teammates...
+                </p>
+                {% else %}
+                <p class="text-sm text-success mt-2">
+                    <i class="fas fa-check mr-1"></i>
+                    Ready to start! Anyone can begin the test.
+                </p>
+                {% endif %}
+            </div>
+
+            <!-- Start Button -->
+            <form method="post">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="start_test">
+                <button
+                    type="submit"
+                    class="btn btn-success btn-lg w-full"
+                    {% if current_size < 2 %}disabled{% endif %}>
+                    <i class="fas fa-play mr-2"></i>
+                    Start Test
+                </button>
+            </form>
+
+            {% if current_size < 2 %}
+            <p class="text-center text-sm opacity-70 mt-4">
+                <i class="fas fa-info-circle"></i>
+                At least 2 students needed to start
+            </p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Auto-refresh notice -->
+    <div class="text-center mt-6 text-sm opacity-70">
+        <i class="fas fa-sync-alt mr-1"></i>
+        This page refreshes automatically every 5 seconds
+    </div>
+</div>
+
+<script>
+function waitingRoom() {
+    return {
+        init() {
+            // Auto-refresh every 5 seconds
+            setInterval(() => {
+                window.location.reload();
+            }, 5000);
+        }
+    }
+}
+</script>
+{% endblock %}

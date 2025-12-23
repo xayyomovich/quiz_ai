@@ -4,177 +4,582 @@
 
 {% block extra_head %}
 <style>
-    /* Hero Background Image */
+    /* Hero with split diagonal design */
     .hero-section {
-        background: linear-gradient(135deg, rgba(37, 99, 235, 0.9), rgba(16, 185, 129, 0.85)),
-                    url('https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
+        min-height: 120vh;
+        height: 120vh;
+        position: relative;
+        overflow: hidden;
+        background: #000;
+        width: 100vw;
+        margin-left: calc(-50vw + 50%);
+        margin-right: calc(-50vw + 50%);
+    }
+
+    /* Image slider container with Ken Burns effect */
+    .image-slider {
+        position: absolute;
+        inset: 0;
+    }
+
+    .slide {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        transition: opacity 2s ease-in-out;
         background-size: cover;
         background-position: center;
-        background-attachment: fixed;
+        animation: kenBurns 20s ease-in-out infinite;
     }
 
-    /* Floating animation */
-    @keyframes float {
-        0%, 100% { transform: translateY(0px); }
-        50% { transform: translateY(-20px); }
+    .slide.active {
+        opacity: 1;
+        z-index: 1;
     }
 
-    .float-animation {
-        animation: float 3s ease-in-out infinite;
+    /* Ken Burns zoom effect */
+    @keyframes kenBurns {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
     }
 
-    /* Gradient text */
-    .gradient-text {
-        background: linear-gradient(135deg, #2563EB, #10B981);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
+    .slide-1 {
+        background-image: url('https://wpvip.edutopia.org/wp-content/uploads/2022/10/iStock-467142812_master.jpg');
     }
 
-    /* Card hover effect */
-    .feature-card {
+    .slide-2 {
+        background-image: url('https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1920&q=80');
+        animation-delay: 0.5s;
+    }
+
+    .slide-3 {
+        background-image: url('https://images.unsplash.com/photo-1509062522246-3755977927d7?w=1920&q=80');
+        animation-delay: 1s;
+    }
+
+    .slide-4 {
+        background-image: url('https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?w=1920&q=80');
+        animation-delay: 1.5s;
+    }
+
+    /* Dynamic gradient overlay that shifts */
+    .dynamic-overlay {
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        background: linear-gradient(
+            120deg,
+            rgba(59, 130, 246, 0.9) 0%,
+            rgba(16, 185, 129, 0.8) 50%,
+            rgba(139, 92, 246, 0.9) 100%
+        );
+        background-size: 200% 200%;
+        animation: gradientShift 15s ease infinite;
+        mix-blend-mode: multiply;
+    }
+
+    @keyframes gradientShift {
+        0%, 100% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+    }
+
+    /* Diagonal stripe pattern */
+    .stripe-overlay {
+        position: absolute;
+        inset: 0;
+        z-index: 3;
+        background: repeating-linear-gradient(
+            45deg,
+            transparent,
+            transparent 100px,
+            rgba(255, 255, 255, 0.03) 100px,
+            rgba(255, 255, 255, 0.03) 200px
+        );
+    }
+
+    /* Animated border accent */
+    .border-accent {
+        position: absolute;
+        width: 200px;
+        height: 200px;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        animation: rotate-border 20s linear infinite, pulse-border 3s ease-in-out infinite;
+    }
+
+    @keyframes rotate-border {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    @keyframes pulse-border {
+        0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.3; }
+        50% { transform: scale(1.2) rotate(180deg); opacity: 0.6; }
+    }
+
+    /* Text animations */
+    @keyframes slideInLeft {
+        from {
+            opacity: 0;
+            transform: translateX(-100px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    @keyframes fadeInScale {
+        from {
+            opacity: 0;
+            transform: scale(0.8);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    .slide-left {
+        animation: slideInLeft 1s ease-out forwards;
+    }
+
+    .fade-scale {
+        animation: fadeInScale 1s ease-out forwards;
+    }
+
+    .delay-1 { animation-delay: 0.2s; opacity: 0; }
+    .delay-2 { animation-delay: 0.4s; opacity: 0; }
+    .delay-3 { animation-delay: 0.6s; opacity: 0; }
+    .delay-4 { animation-delay: 0.8s; opacity: 0; }
+    .delay-5 { animation-delay: 1s; opacity: 0; }
+
+    /* Glowing button effect */
+    .glow-button {
+        position: relative;
+        background: linear-gradient(135deg, #3B82F6, #2563EB);
+        border: none;
+        padding: 1.2rem 2.5rem;
+        border-radius: 50px;
+        font-weight: 700;
+        color: white;
+        overflow: hidden;
         transition: all 0.3s ease;
+        box-shadow: 0 10px 30px rgba(59, 130, 246, 0.4);
     }
 
-    .feature-card:hover {
+    .glow-button::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(
+            45deg,
+            transparent,
+            rgba(255, 255, 255, 0.3),
+            transparent
+        );
+        transform: rotate(45deg);
+        animation: shine 3s linear infinite;
+    }
+
+    @keyframes shine {
+        0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+        100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+    }
+
+    .glow-button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 40px rgba(59, 130, 246, 0.6);
+    }
+
+    .outline-button {
+        background: transparent;
+        border: 3px solid white;
+        padding: 1.2rem 2.5rem;
+        border-radius: 50px;
+        font-weight: 700;
+        color: white;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(10px);
+    }
+
+    .outline-button:hover {
+        background: white;
+        color: #3B82F6;
+        transform: translateY(-3px);
+    }
+
+    /* Stats with floating animation */
+    .stat-box {
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 20px;
+        padding: 2rem;
+        transition: all 0.4s ease;
+        animation: float 6s ease-in-out infinite;
+    }
+
+    @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-15px); }
+    }
+
+    .stat-box:nth-child(1) { animation-delay: 0s; }
+    .stat-box:nth-child(2) { animation-delay: 0.5s; }
+    .stat-box:nth-child(3) { animation-delay: 1s; }
+    .stat-box:nth-child(4) { animation-delay: 1.5s; }
+
+    .stat-box:hover {
+        background: rgba(255, 255, 255, 0.25);
+        transform: translateY(-20px) scale(1.05);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    /* Progress indicators */
+    .slide-progress {
+        position: absolute;
+        bottom: 100px;
+        right: 40px;
+        z-index: 20;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .progress-bar {
+        width: 4px;
+        height: 60px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 2px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .progress-fill {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 0%;
+        background: white;
+        transition: height 0.3s ease;
+    }
+
+    .progress-bar.active .progress-fill {
+        animation: fillProgress 6s linear;
+    }
+
+    @keyframes fillProgress {
+        from { height: 0%; }
+        to { height: 100%; }
+    }
+
+    /* Particle effects */
+    .particles {
+        position: absolute;
+        inset: 0;
+        z-index: 4;
+        pointer-events: none;
+    }
+
+    .particle {
+        position: absolute;
+        width: 6px;
+        height: 6px;
+        background: rgba(255, 255, 255, 0.6);
+        border-radius: 50%;
+        box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+        animation: floatParticle 15s linear infinite;
+    }
+
+    @keyframes floatParticle {
+        0% {
+            transform: translateY(100vh) translateX(0) scale(0);
+            opacity: 0;
+        }
+        10% {
+            opacity: 1;
+        }
+        90% {
+            opacity: 1;
+        }
+        100% {
+            transform: translateY(-100px) translateX(100px) scale(1);
+            opacity: 0;
+        }
+    }
+
+    /* Bright colorful feature cards */
+    .feature-card-bright {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        transition: all 0.3s ease;
+        border-radius: 24px;
+        overflow: hidden;
+    }
+
+    .feature-card-bright:hover {
+        transform: translateY(-10px) scale(1.02);
+        box-shadow: 0 20px 60px rgba(102, 126, 234, 0.4);
+    }
+
+    .feature-card-blue {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .feature-card-green {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+
+    .feature-card-orange {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+
+    /* Bright gradient backgrounds */
+    .bg-gradient-bright-1 {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .bg-gradient-bright-2 {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+
+    .bg-gradient-bright-3 {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+    }
+
+    .bg-gradient-bright-4 {
+        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+    }
+
+    .bg-gradient-bright-5 {
+        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+    }
+
+    /* How it works step cards */
+    .step-card {
+        background: white;
+        border-radius: 24px;
+        padding: 2rem;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        border: 3px solid transparent;
+    }
+
+    .step-card:hover {
         transform: translateY(-10px);
-        box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+        border-color: #3B82F6;
+    }
+
+    .step-number {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        font-weight: 900;
+        color: white;
+        margin: 0 auto 1.5rem;
+        box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .slide-progress {
+            bottom: 80px;
+            right: 20px;
+        }
+        .progress-bar {
+            height: 40px;
+        }
     }
 </style>
 {% endblock %}
 
 {% block content %}
 <!-- Hero Section -->
-<section class="hero-section min-h-screen flex items-center justify-center relative overflow-hidden">
-    <!-- Animated Shapes Background -->
-    <div class="absolute inset-0 overflow-hidden pointer-events-none">
-        <div class="absolute top-20 left-10 w-72 h-72 bg-primary/20 rounded-full blur-3xl float-animation"></div>
-        <div class="absolute bottom-20 right-10 w-96 h-96 bg-success/20 rounded-full blur-3xl float-animation" style="animation-delay: 1s;"></div>
+<section class="hero-section">
+    <!-- Image Slider -->
+    <div class="image-slider">
+        <div class="slide slide-1 active"></div>
+        <div class="slide slide-2"></div>
+        <div class="slide slide-3"></div>
+        <div class="slide slide-4"></div>
     </div>
 
-    <div class="container mx-auto px-4 relative z-10">
-        <div class="text-center text-white">
-            <!-- Logo -->
-            <div class="mb-8 float-animation">
-                <h1 class="text-8xl md:text-9xl font-black tracking-tighter mb-4">
+    <!-- Dynamic gradient overlay -->
+    <div class="dynamic-overlay"></div>
+
+    <!-- Stripe pattern -->
+    <div class="stripe-overlay"></div>
+
+    <!-- Floating particles -->
+    <div class="particles" id="particles"></div>
+
+    <!-- Decorative borders -->
+    <div class="border-accent" style="top: 10%; left: 5%;"></div>
+    <div class="border-accent" style="bottom: 15%; right: 10%; animation-delay: 5s;"></div>
+    <div class="border-accent" style="top: 60%; left: 15%; width: 150px; height: 150px; animation-delay: 10s;"></div>
+
+    <!-- Main Content -->
+    <div class="h-full flex items-center relative" style="z-index: 10;">
+        <div class="container mx-auto px-6 md:px-12 lg:px-20">
+            <div class="max-w-5xl py-20">
+                <!-- Badge -->
+                <div class="slide-left mb-6">
+                    <span class="inline-block bg-white/20 text-white px-6 py-3 rounded-full text-sm font-bold backdrop-blur-md border border-white/30">
+                        <i class="fas fa-sparkles mr-2"></i>
+                        Next Generation Learning Platform
+                    </span>
+                </div>
+
+                <!-- Main heading -->
+                <h1 class="text-6xl md:text-8xl font-black text-white mb-8 leading-none slide-left delay-1" style="text-shadow: 2px 2px 20px rgba(0,0,0,0.5);">
                     CLD
                 </h1>
-                <div class="h-1 w-32 bg-white mx-auto rounded-full"></div>
-            </div>
 
-            <!-- Main Heading -->
-            <h2 class="text-3xl md:text-5xl font-bold mb-6 max-w-4xl mx-auto leading-tight">
-                Collaborative Learning Development
-            </h2>
+                <h2 class="text-3xl md:text-5xl font-bold text-white mb-6 leading-tight slide-left delay-2">
+                    Collaborative Learning<br/>
+                    <span style="background: linear-gradient(90deg, #60A5FA, #34D399, #A78BFA); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+                        Development Platform
+                    </span>
+                </h2>
 
-            <p class="text-xl md:text-2xl mb-12 max-w-3xl mx-auto font-light">
-                AI-powered platform for modern education
-            </p>
+                <!-- Description -->
+                <p class="text-xl md:text-2xl text-white/90 mb-12 max-w-3xl leading-relaxed slide-left delay-3" style="text-shadow: 1px 1px 10px rgba(0,0,0,0.5);">
+                    Transform education with AI-powered test creation, intelligent anti-cheat systems,
+                    and real-time analytics that empower teachers and inspire students.
+                </p>
 
-            <!-- CTA Buttons -->
-            <div class="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-                <a href="{% url 'webapp:register' %}" class="btn btn-lg bg-white text-primary hover:bg-gray-100 border-0 shadow-xl">
-                    <i class="fas fa-rocket mr-2"></i>
-                    Create Free Account
-                </a>
-                <a href="#features" class="btn btn-lg btn-outline text-white border-white hover:bg-white hover:text-primary">
-                    <i class="fas fa-info-circle mr-2"></i>
-                    Learn More
-                </a>
-            </div>
-
-            <!-- Trust Indicators -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-3xl mx-auto">
-                <div class="backdrop-blur-sm bg-white/10 rounded-lg p-4">
-                    <div class="text-3xl font-bold">500+</div>
-                    <div class="text-sm opacity-90">Tests Created</div>
+                <!-- CTA Buttons -->
+                <div class="flex flex-col sm:flex-row gap-6 mb-16 slide-left delay-4">
+                    <a href="{% url 'webapp:register' %}" class="glow-button inline-flex items-center justify-center">
+                        <i class="fas fa-rocket mr-3"></i>
+                        Start Free Trial
+                    </a>
+                    <a href="#features" class="outline-button inline-flex items-center justify-center">
+                        <i class="fas fa-play-circle mr-3"></i>
+                        Watch Demo
+                    </a>
                 </div>
-                <div class="backdrop-blur-sm bg-white/10 rounded-lg p-4">
-                    <div class="text-3xl font-bold">2,000+</div>
-                    <div class="text-sm opacity-90">Active Students</div>
-                </div>
-                <div class="backdrop-blur-sm bg-white/10 rounded-lg p-4">
-                    <div class="text-3xl font-bold">50+</div>
-                    <div class="text-sm opacity-90">Schools</div>
-                </div>
-                <div class="backdrop-blur-sm bg-white/10 rounded-lg p-4">
-                    <div class="text-3xl font-bold">99%</div>
-                    <div class="text-sm opacity-90">Satisfaction</div>
+
+                <!-- Stats -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-6 fade-scale delay-5">
+                    <div class="stat-box text-center">
+                        <div class="text-5xl font-black text-white mb-2">500+</div>
+                        <div class="text-sm font-semibold text-white/80">Tests Created</div>
+                    </div>
+                    <div class="stat-box text-center">
+                        <div class="text-5xl font-black text-white mb-2">2K+</div>
+                        <div class="text-sm font-semibold text-white/80">Active Students</div>
+                    </div>
+                    <div class="stat-box text-center">
+                        <div class="text-5xl font-black text-white mb-2">50+</div>
+                        <div class="text-sm font-semibold text-white/80">Schools</div>
+                    </div>
+                    <div class="stat-box text-center">
+                        <div class="text-5xl font-black text-white mb-2">99%</div>
+                        <div class="text-sm font-semibold text-white/80">Satisfaction</div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Scroll Indicator -->
-    <div class="absolute bottom-8 left-1/2 -translate-x-1/2 text-white animate-bounce">
-        <i class="fas fa-chevron-down text-2xl"></i>
+    <!-- Slide progress indicators -->
+    <div class="slide-progress">
+        <div class="progress-bar active">
+            <div class="progress-fill"></div>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill"></div>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill"></div>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill"></div>
+        </div>
+    </div>
+
+    <!-- Scroll indicator -->
+    <div class="absolute bottom-8 left-1/2 -translate-x-1/2 text-white" style="z-index: 10;">
+        <div class="text-center animate-bounce">
+            <div class="text-sm mb-2 font-semibold opacity-80">Discover More</div>
+            <i class="fas fa-chevron-down text-2xl"></i>
+        </div>
     </div>
 </section>
 
 <!-- Features Section -->
-<section id="features" class="py-20 bg-base-100">
+<section id="features" class="py-24 bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50">
     <div class="container mx-auto px-4">
         <div class="text-center mb-16">
-            <h2 class="text-4xl md:text-5xl font-bold mb-4">
-                Powerful Features for <span class="gradient-text">Modern Education</span>
+            <span class="inline-block bg-gradient-bright-1 text-white px-6 py-2 rounded-full text-sm font-bold mb-4">
+                <i class="fas fa-star mr-2"></i>FEATURES
+            </span>
+            <h2 class="text-5xl md:text-6xl font-black mb-6 bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+                Powerful Features for Modern Education
             </h2>
-            <p class="text-xl text-base-content/70 max-w-2xl mx-auto">
+            <p class="text-xl text-gray-600 max-w-3xl mx-auto">
                 Everything you need to create, share, and assess learning in one platform
             </p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-7xl mx-auto">
             <!-- Feature 1: AI Generation -->
-            <div class="feature-card card bg-base-100 shadow-xl border-2 border-base-300">
-                <div class="card-body items-center text-center">
-                    <div class="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-4">
-                        <i class="fas fa-robot text-4xl text-primary"></i>
-                    </div>
-                    <h3 class="card-title text-2xl mb-2">AI-Powered Test Generation</h3>
-                    <p class="text-base-content/70">
-                        Create professional tests in seconds using advanced AI. Just describe what you need,
-                        and our AI generates high-quality questions instantly.
-                    </p>
-                    <div class="badge badge-primary badge-lg mt-4">
-                        <i class="fas fa-bolt mr-1"></i>
-                        5-10 seconds
-                    </div>
+            <div class="feature-card-bright feature-card-blue text-white p-8 rounded-3xl shadow-2xl">
+                <div class="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center mb-6 backdrop-blur-sm">
+                    <i class="fas fa-robot text-5xl"></i>
+                </div>
+                <h3 class="text-3xl font-black mb-4">AI-Powered Test Generation</h3>
+                <p class="text-lg mb-6 text-white/90">
+                    Create professional tests in seconds using advanced AI. Just describe what you need,
+                    and our AI generates high-quality questions instantly.
+                </p>
+                <div class="inline-block bg-white/20 px-4 py-2 rounded-full text-sm font-bold backdrop-blur-sm">
+                    <i class="fas fa-bolt mr-2"></i>
+                    5-10 seconds
                 </div>
             </div>
 
             <!-- Feature 2: Anti-Cheat -->
-            <div class="feature-card card bg-base-100 shadow-xl border-2 border-base-300">
-                <div class="card-body items-center text-center">
-                    <div class="w-20 h-20 bg-error/10 rounded-full flex items-center justify-center mb-4">
-                        <i class="fas fa-shield-alt text-4xl text-error"></i>
-                    </div>
-                    <h3 class="card-title text-2xl mb-2">Anti-Cheat Technology</h3>
-                    <p class="text-base-content/70">
-                        Advanced monitoring detects tab switching, copy-paste attempts, and suspicious behavior.
-                        Ensures fair and honest assessments for all students.
-                    </p>
-                    <div class="badge badge-error badge-lg mt-4">
-                        <i class="fas fa-lock mr-1"></i>
-                        100% Secure
-                    </div>
+            <div class="feature-card-bright feature-card-green text-white p-8 rounded-3xl shadow-2xl">
+                <div class="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center mb-6 backdrop-blur-sm">
+                    <i class="fas fa-shield-alt text-5xl"></i>
+                </div>
+                <h3 class="text-3xl font-black mb-4">Anti-Cheat Technology</h3>
+                <p class="text-lg mb-6 text-white/90">
+                    Advanced monitoring detects tab switching, copy-paste attempts, and suspicious behavior.
+                    Ensures fair and honest assessments for all students.
+                </p>
+                <div class="inline-block bg-white/20 px-4 py-2 rounded-full text-sm font-bold backdrop-blur-sm">
+                    <i class="fas fa-lock mr-2"></i>
+                    100% Secure
                 </div>
             </div>
 
             <!-- Feature 3: Analytics -->
-            <div class="feature-card card bg-base-100 shadow-xl border-2 border-base-300">
-                <div class="card-body items-center text-center">
-                    <div class="w-20 h-20 bg-success/10 rounded-full flex items-center justify-center mb-4">
-                        <i class="fas fa-chart-line text-4xl text-success"></i>
-                    </div>
-                    <h3 class="card-title text-2xl mb-2">Instant Results & Analytics</h3>
-                    <p class="text-base-content/70">
-                        Real-time grading, detailed performance analytics, and comprehensive reports.
-                        Track progress and identify areas for improvement instantly.
-                    </p>
-                    <div class="badge badge-success badge-lg mt-4">
-                        <i class="fas fa-tachometer-alt mr-1"></i>
-                        Real-time
-                    </div>
+            <div class="feature-card-bright feature-card-orange text-white p-8 rounded-3xl shadow-2xl">
+                <div class="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center mb-6 backdrop-blur-sm">
+                    <i class="fas fa-chart-line text-5xl"></i>
+                </div>
+                <h3 class="text-3xl font-black mb-4">Instant Results & Analytics</h3>
+                <p class="text-lg mb-6 text-white/90">
+                    Real-time grading, detailed performance analytics, and comprehensive reports.
+                    Track progress and identify areas for improvement instantly.
+                </p>
+                <div class="inline-block bg-white/20 px-4 py-2 rounded-full text-sm font-bold backdrop-blur-sm">
+                    <i class="fas fa-tachometer-alt mr-2"></i>
+                    Real-time
                 </div>
             </div>
         </div>
@@ -182,48 +587,45 @@
 </section>
 
 <!-- How It Works -->
-<section id="how-it-works" class="py-20 bg-base-200">
+<section id="how-it-works" class="py-24 bg-white">
     <div class="container mx-auto px-4">
         <div class="text-center mb-16">
-            <h2 class="text-4xl md:text-5xl font-bold mb-4">
-                How <span class="gradient-text">CLD</span> Works
+            <span class="inline-block bg-gradient-bright-4 text-white px-6 py-2 rounded-full text-sm font-bold mb-4">
+                <i class="fas fa-rocket mr-2"></i>SIMPLE PROCESS
+            </span>
+            <h2 class="text-5xl md:text-6xl font-black mb-6 bg-gradient-to-r from-green-600 to-cyan-600 bg-clip-text text-transparent">
+                How CLD Works
             </h2>
-            <p class="text-xl text-base-content/70">
+            <p class="text-xl text-gray-600">
                 Get started in three simple steps
             </p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
             <!-- Step 1 -->
-            <div class="text-center">
-                <div class="w-16 h-16 bg-primary text-primary-content rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
-                    1
-                </div>
-                <h3 class="text-2xl font-bold mb-2">Create Account</h3>
-                <p class="text-base-content/70">
-                    Sign up for free as a teacher or student. No credit card required.
+            <div class="step-card">
+                <div class="step-number">1</div>
+                <h3 class="text-2xl font-bold mb-4 text-center">Create Account</h3>
+                <p class="text-gray-600 text-center leading-relaxed">
+                    Sign up for free as a teacher or student. No credit card required. Start creating or taking tests in seconds.
                 </p>
             </div>
 
             <!-- Step 2 -->
-            <div class="text-center">
-                <div class="w-16 h-16 bg-primary text-primary-content rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
-                    2
-                </div>
-                <h3 class="text-2xl font-bold mb-2">Create or Take Tests</h3>
-                <p class="text-base-content/70">
-                    Teachers create AI-powered tests. Students take them via simple links.
+            <div class="step-card">
+                <div class="step-number" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">2</div>
+                <h3 class="text-2xl font-bold mb-4 text-center">Create or Take Tests</h3>
+                <p class="text-gray-600 text-center leading-relaxed">
+                    Teachers create AI-powered tests in seconds. Students take them via simple links or QR codes.
                 </p>
             </div>
 
             <!-- Step 3 -->
-            <div class="text-center">
-                <div class="w-16 h-16 bg-primary text-primary-content rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
-                    3
-                </div>
-                <h3 class="text-2xl font-bold mb-2">Track Progress</h3>
-                <p class="text-base-content/70">
-                    View detailed analytics, scores, and performance insights instantly.
+            <div class="step-card">
+                <div class="step-number" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">3</div>
+                <h3 class="text-2xl font-bold mb-4 text-center">Track Progress</h3>
+                <p class="text-gray-600 text-center leading-relaxed">
+                    View detailed analytics, scores, and performance insights instantly with beautiful dashboards.
                 </p>
             </div>
         </div>
@@ -231,74 +633,104 @@
 </section>
 
 <!-- For Teachers & Students -->
-<section class="py-20 bg-base-100">
+<section class="py-24 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
     <div class="container mx-auto px-4">
+        <div class="text-center mb-16">
+            <h2 class="text-5xl md:text-6xl font-black mb-6 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                Built For Everyone
+            </h2>
+        </div>
+
         <div class="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-6xl mx-auto">
             <!-- For Teachers -->
-            <div class="card bg-gradient-to-br from-primary to-blue-600 text-white shadow-2xl">
-                <div class="card-body">
-                    <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mb-4">
-                        <i class="fas fa-chalkboard-teacher text-3xl"></i>
+            <div class="bg-white rounded-3xl shadow-2xl overflow-hidden hover:shadow-3xl transition-all duration-300 hover:-translate-y-2">
+                <div class="bg-gradient-bright-1 p-8">
+                    <div class="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center mb-4 backdrop-blur-sm">
+                        <i class="fas fa-chalkboard-teacher text-4xl text-white"></i>
                     </div>
-                    <h3 class="card-title text-3xl mb-4">For Teachers</h3>
-                    <ul class="space-y-3 mb-6">
-                        <li class="flex items-start gap-2">
-                            <i class="fas fa-check-circle text-xl mt-1"></i>
-                            <span>Generate tests in seconds with AI</span>
+                    <h3 class="text-4xl font-black text-white mb-2">For Teachers</h3>
+                </div>
+                <div class="p-8">
+                    <ul class="space-y-4 mb-8">
+                        <li class="flex items-start gap-3">
+                            <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                                <i class="fas fa-check text-purple-600"></i>
+                            </div>
+                            <span class="text-gray-700 text-lg">Generate tests in seconds with AI</span>
                         </li>
-                        <li class="flex items-start gap-2">
-                            <i class="fas fa-check-circle text-xl mt-1"></i>
-                            <span>Set timers and automatic grading</span>
+                        <li class="flex items-start gap-3">
+                            <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                                <i class="fas fa-check text-purple-600"></i>
+                            </div>
+                            <span class="text-gray-700 text-lg">Set timers and automatic grading</span>
                         </li>
-                        <li class="flex items-start gap-2">
-                            <i class="fas fa-check-circle text-xl mt-1"></i>
-                            <span>Monitor student progress in real-time</span>
+                        <li class="flex items-start gap-3">
+                            <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                                <i class="fas fa-check text-purple-600"></i>
+                            </div>
+                            <span class="text-gray-700 text-lg">Monitor student progress in real-time</span>
                         </li>
-                        <li class="flex items-start gap-2">
-                            <i class="fas fa-check-circle text-xl mt-1"></i>
-                            <span>Detect and prevent cheating automatically</span>
+                        <li class="flex items-start gap-3">
+                            <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                                <i class="fas fa-check text-purple-600"></i>
+                            </div>
+                            <span class="text-gray-700 text-lg">Detect and prevent cheating automatically</span>
                         </li>
-                        <li class="flex items-start gap-2">
-                            <i class="fas fa-check-circle text-xl mt-1"></i>
-                            <span>Share tests with a simple link or QR code</span>
+                        <li class="flex items-start gap-3">
+                            <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                                <i class="fas fa-check text-purple-600"></i>
+                            </div>
+                            <span class="text-gray-700 text-lg">Share tests with a simple link or QR code</span>
                         </li>
                     </ul>
-                    <a href="{% url 'webapp:register' %}" class="btn bg-white text-primary hover:bg-gray-100 border-0">
+                    <a href="{% url 'webapp:register' %}" class="block w-full bg-gradient-bright-1 text-white text-center py-4 rounded-2xl font-bold text-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
                         Start Teaching <i class="fas fa-arrow-right ml-2"></i>
                     </a>
                 </div>
             </div>
 
             <!-- For Students -->
-            <div class="card bg-gradient-to-br from-success to-green-600 text-white shadow-2xl">
-                <div class="card-body">
-                    <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mb-4">
-                        <i class="fas fa-graduation-cap text-3xl"></i>
+            <div class="bg-white rounded-3xl shadow-2xl overflow-hidden hover:shadow-3xl transition-all duration-300 hover:-translate-y-2">
+                <div class="bg-gradient-bright-4 p-8">
+                    <div class="w-20 h-20 bg-white/20 rounded-2xl flex items-center justify-center mb-4 backdrop-blur-sm">
+                        <i class="fas fa-graduation-cap text-4xl text-white"></i>
                     </div>
-                    <h3 class="card-title text-3xl mb-4">For Students</h3>
-                    <ul class="space-y-3 mb-6">
-                        <li class="flex items-start gap-2">
-                            <i class="fas fa-check-circle text-xl mt-1"></i>
-                            <span>Take tests anywhere, anytime</span>
+                    <h3 class="text-4xl font-black text-white mb-2">For Students</h3>
+                </div>
+                <div class="p-8">
+                    <ul class="space-y-4 mb-8">
+                        <li class="flex items-start gap-3">
+                            <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                                <i class="fas fa-check text-green-600"></i>
+                            </div>
+                            <span class="text-gray-700 text-lg">Take tests anywhere, anytime</span>
                         </li>
-                        <li class="flex items-start gap-2">
-                            <i class="fas fa-check-circle text-xl mt-1"></i>
-                            <span>Get instant results and feedback</span>
+                        <li class="flex items-start gap-3">
+                            <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                                <i class="fas fa-check text-green-600"></i>
+                            </div>
+                            <span class="text-gray-700 text-lg">Get instant results and feedback</span>
                         </li>
-                        <li class="flex items-start gap-2">
-                            <i class="fas fa-check-circle text-xl mt-1"></i>
-                            <span>Review correct answers after submission</span>
+                        <li class="flex items-start gap-3">
+                            <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                                <i class="fas fa-check text-green-600"></i>
+                            </div>
+                            <span class="text-gray-700 text-lg">Review correct answers after submission</span>
                         </li>
-                        <li class="flex items-start gap-2">
-                            <i class="fas fa-check-circle text-xl mt-1"></i>
-                            <span>Track your progress and performance</span>
+                        <li class="flex items-start gap-3">
+                            <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                                <i class="fas fa-check text-green-600"></i>
+                            </div>
+                            <span class="text-gray-700 text-lg">Track your progress and performance</span>
                         </li>
-                        <li class="flex items-start gap-2">
-                            <i class="fas fa-check-circle text-xl mt-1"></i>
-                            <span>Mobile-friendly interface</span>
+                        <li class="flex items-start gap-3">
+                            <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                                <i class="fas fa-check text-green-600"></i>
+                            </div>
+                            <span class="text-gray-700 text-lg">Mobile-friendly interface</span>
                         </li>
                     </ul>
-                    <a href="{% url 'webapp:register' %}" class="btn bg-white text-success hover:bg-gray-100 border-0">
+                    <a href="{% url 'webapp:register' %}" class="block w-full bg-gradient-bright-4 text-white text-center py-4 rounded-2xl font-bold text-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
                         Start Learning <i class="fas fa-arrow-right ml-2"></i>
                     </a>
                 </div>
@@ -308,95 +740,98 @@
 </section>
 
 <!-- Statistics -->
-<section class="py-20 bg-gradient-to-br from-primary to-blue-600 text-white">
+<section class="py-24 bg-gradient-bright-5">
     <div class="container mx-auto px-4">
-        <div class="text-center mb-12">
-            <h2 class="text-4xl md:text-5xl font-bold mb-4">
+        <div class="text-center mb-16">
+            <h2 class="text-5xl md:text-6xl font-black text-white mb-6">
                 Trusted by Educators Worldwide
             </h2>
-            <p class="text-xl opacity-90">
+            <p class="text-2xl text-white/90">
                 Join thousands of teachers and students already using CLD
             </p>
         </div>
 
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto">
-            <div class="text-center">
-                <div class="text-5xl md:text-6xl font-bold mb-2">10K+</div>
-                <div class="text-lg opacity-90">Questions Generated</div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-5xl mx-auto">
+            <div class="text-center bg-white/20 backdrop-blur-lg rounded-3xl p-8 hover:bg-white/30 transition-all duration-300 hover:-translate-y-2">
+                <div class="text-6xl md:text-7xl font-black text-white mb-3">10K+</div>
+                <div class="text-xl text-white/90 font-semibold">Questions Generated</div>
             </div>
-            <div class="text-center">
-                <div class="text-5xl md:text-6xl font-bold mb-2">500+</div>
-                <div class="text-lg opacity-90">Active Teachers</div>
+            <div class="text-center bg-white/20 backdrop-blur-lg rounded-3xl p-8 hover:bg-white/30 transition-all duration-300 hover:-translate-y-2">
+                <div class="text-6xl md:text-7xl font-black text-white mb-3">500+</div>
+                <div class="text-xl text-white/90 font-semibold">Active Teachers</div>
             </div>
-            <div class="text-center">
-                <div class="text-5xl md:text-6xl font-bold mb-2">2K+</div>
-                <div class="text-lg opacity-90">Students</div>
+            <div class="text-center bg-white/20 backdrop-blur-lg rounded-3xl p-8 hover:bg-white/30 transition-all duration-300 hover:-translate-y-2">
+                <div class="text-6xl md:text-7xl font-black text-white mb-3">2K+</div>
+                <div class="text-xl text-white/90 font-semibold">Students</div>
             </div>
-            <div class="text-center">
-                <div class="text-5xl md:text-6xl font-bold mb-2">50+</div>
-                <div class="text-lg opacity-90">Institutions</div>
+            <div class="text-center bg-white/20 backdrop-blur-lg rounded-3xl p-8 hover:bg-white/30 transition-all duration-300 hover:-translate-y-2">
+                <div class="text-6xl md:text-7xl font-black text-white mb-3">50+</div>
+                <div class="text-xl text-white/90 font-semibold">Institutions</div>
             </div>
         </div>
     </div>
 </section>
 
 <!-- FAQ -->
-<section id="faq" class="py-20 bg-base-100">
+<section id="faq" class="py-24 bg-white">
     <div class="container mx-auto px-4 max-w-4xl">
-        <div class="text-center mb-12">
-            <h2 class="text-4xl md:text-5xl font-bold mb-4">
+        <div class="text-center mb-16">
+            <span class="inline-block bg-gradient-bright-2 text-white px-6 py-2 rounded-full text-sm font-bold mb-4">
+                <i class="fas fa-question-circle mr-2"></i>FAQ
+            </span>
+            <h2 class="text-5xl md:text-6xl font-black mb-6 bg-gradient-to-r from-pink-600 to-red-600 bg-clip-text text-transparent">
                 Frequently Asked Questions
             </h2>
         </div>
 
         <div class="space-y-4">
-            <div class="collapse collapse-plus bg-base-200">
+            <div class="collapse collapse-plus bg-gradient-to-r from-purple-50 to-blue-50 rounded-2xl border-2 border-purple-100">
                 <input type="radio" name="faq-accordion" checked="checked" />
-                <div class="collapse-title text-xl font-bold">
-                    Is CLD really free to use?
+                <div class="collapse-title text-xl font-bold text-gray-800">
+                    <i class="fas fa-gift text-purple-600 mr-3"></i>Is CLD really free to use?
                 </div>
                 <div class="collapse-content">
-                    <p>Yes! CLD is completely free for both teachers and students. Create unlimited tests and assess unlimited students at no cost.</p>
+                    <p class="text-gray-600 leading-relaxed">Yes! CLD is completely free for both teachers and students. Create unlimited tests and assess unlimited students at no cost.</p>
                 </div>
             </div>
 
-            <div class="collapse collapse-plus bg-base-200">
+            <div class="collapse collapse-plus bg-gradient-to-r from-pink-50 to-red-50 rounded-2xl border-2 border-pink-100">
                 <input type="radio" name="faq-accordion" />
-                <div class="collapse-title text-xl font-bold">
-                    How does the AI test generation work?
+                <div class="collapse-title text-xl font-bold text-gray-800">
+                    <i class="fas fa-robot text-pink-600 mr-3"></i>How does the AI test generation work?
                 </div>
                 <div class="collapse-content">
-                    <p>Simply describe the topic, difficulty level, and number of questions you need. Our AI will generate a complete test with multiple-choice questions in 5-10 seconds.</p>
+                    <p class="text-gray-600 leading-relaxed">Simply describe the topic, difficulty level, and number of questions you need. Our AI will generate a complete test with multiple-choice questions in 5-10 seconds.</p>
                 </div>
             </div>
 
-            <div class="collapse collapse-plus bg-base-200">
+            <div class="collapse collapse-plus bg-gradient-to-r from-blue-50 to-cyan-50 rounded-2xl border-2 border-blue-100">
                 <input type="radio" name="faq-accordion" />
-                <div class="collapse-title text-xl font-bold">
-                    What is the anti-cheat system?
+                <div class="collapse-title text-xl font-bold text-gray-800">
+                    <i class="fas fa-shield-alt text-blue-600 mr-3"></i>What is the anti-cheat system?
                 </div>
                 <div class="collapse-content">
-                    <p>Our system monitors student behavior during tests, detecting tab switching, copy-paste attempts, and other suspicious activities. If cheating is detected, the test is automatically submitted with only answered questions graded.</p>
+                    <p class="text-gray-600 leading-relaxed">Our system monitors student behavior during tests, detecting tab switching, copy-paste attempts, and other suspicious activities. If cheating is detected, the test is automatically submitted with only answered questions graded.</p>
                 </div>
             </div>
 
-            <div class="collapse collapse-plus bg-base-200">
+            <div class="collapse collapse-plus bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl border-2 border-green-100">
                 <input type="radio" name="faq-accordion" />
-                <div class="collapse-title text-xl font-bold">
-                    Can I create tests manually?
+                <div class="collapse-title text-xl font-bold text-gray-800">
+                    <i class="fas fa-edit text-green-600 mr-3"></i>Can I create tests manually?
                 </div>
                 <div class="collapse-content">
-                    <p>Absolutely! You can paste your own questions and answer keys, or use our AI to generate them. Both options are available.</p>
+                    <p class="text-gray-600 leading-relaxed">Absolutely! You can paste your own questions and answer keys, or use our AI to generate them. Both options are available.</p>
                 </div>
             </div>
 
-            <div class="collapse collapse-plus bg-base-200">
+            <div class="collapse collapse-plus bg-gradient-to-r from-orange-50 to-yellow-50 rounded-2xl border-2 border-orange-100">
                 <input type="radio" name="faq-accordion" />
-                <div class="collapse-title text-xl font-bold">
-                    Do students need to create accounts?
+                <div class="collapse-title text-xl font-bold text-gray-800">
+                    <i class="fas fa-user-graduate text-orange-600 mr-3"></i>Do students need to create accounts?
                 </div>
                 <div class="collapse-content">
-                    <p>Yes, students need a free account to take tests. This allows them to track their progress and view past results.</p>
+                    <p class="text-gray-600 leading-relaxed">Yes, students need a free account to take tests. This allows them to track their progress and view past results.</p>
                 </div>
             </div>
         </div>
@@ -404,24 +839,65 @@
 </section>
 
 <!-- Final CTA -->
-<section class="py-20 bg-gradient-to-br from-success to-green-600 text-white">
-    <div class="container mx-auto px-4 text-center">
-        <h2 class="text-4xl md:text-5xl font-bold mb-6">
+<section class="py-24 bg-gradient-bright-3 relative overflow-hidden">
+    <!-- Decorative elements -->
+    <div class="absolute top-10 left-10 w-72 h-72 bg-white/10 rounded-full blur-3xl"></div>
+    <div class="absolute bottom-10 right-10 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
+
+    <div class="container mx-auto px-4 text-center relative z-10">
+        <h2 class="text-5xl md:text-6xl font-black text-white mb-8">
             Ready to Transform Your Teaching?
         </h2>
-        <p class="text-xl mb-8 max-w-2xl mx-auto">
+        <p class="text-2xl text-white/90 mb-12 max-w-3xl mx-auto">
             Join CLD today and experience the future of education
         </p>
-        <div class="flex flex-col sm:flex-row gap-4 justify-center">
-            <a href="{% url 'webapp:register' %}" class="btn btn-lg bg-white text-success hover:bg-gray-100 border-0 shadow-xl">
-                <i class="fas fa-rocket mr-2"></i>
+        <div class="flex flex-col sm:flex-row gap-6 justify-center">
+            <a href="{% url 'webapp:register' %}" class="inline-flex items-center justify-center bg-white text-cyan-600 px-10 py-5 rounded-full font-black text-xl shadow-2xl hover:shadow-3xl hover:-translate-y-2 transition-all duration-300">
+                <i class="fas fa-rocket mr-3"></i>
                 Create Free Account
             </a>
-            <a href="{% url 'webapp:login' %}" class="btn btn-lg btn-outline text-white border-white hover:bg-white hover:text-success">
-                <i class="fas fa-sign-in-alt mr-2"></i>
+            <a href="{% url 'webapp:login' %}" class="inline-flex items-center justify-center bg-transparent border-4 border-white text-white px-10 py-5 rounded-full font-black text-xl hover:bg-white hover:text-cyan-600 transition-all duration-300">
+                <i class="fas fa-sign-in-alt mr-3"></i>
                 Login
             </a>
         </div>
     </div>
 </section>
+
+<script>
+    // Auto-sliding images
+    const slides = document.querySelectorAll('.slide');
+    const progressBars = document.querySelectorAll('.progress-bar');
+    let currentSlide = 0;
+    const slideInterval = 6000; // 6 seconds per slide
+
+    function showSlide(index) {
+        slides.forEach((slide, i) => {
+            slide.classList.toggle('active', i === index);
+        });
+
+        progressBars.forEach((bar, i) => {
+            bar.classList.toggle('active', i === index);
+        });
+    }
+
+    function nextSlide() {
+        currentSlide = (currentSlide + 1) % slides.length;
+        showSlide(currentSlide);
+    }
+
+    // Start auto-sliding
+    setInterval(nextSlide, slideInterval);
+
+    // Generate floating particles
+    const particlesContainer = document.getElementById('particles');
+    for (let i = 0; i < 30; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.animationDelay = Math.random() * 15 + 's';
+        particle.style.animationDuration = (10 + Math.random() * 10) + 's';
+        particlesContainer.appendChild(particle);
+    }
+</script>
 {% endblock %}

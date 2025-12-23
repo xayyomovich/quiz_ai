@@ -10,7 +10,8 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 from collections import defaultdict
 
-from .forms import UserRegistrationForm, UserLoginForm, TestCreationForm, ManualTestCreationForm
+from .forms import UserRegistrationForm, UserLoginForm, TestCreationForm, ManualTestCreationForm, \
+    CreateGroupTestDirectForm
 from quizapp.models import User, Test, Question, Assignment, StudentAttempt, StudentAnswer
 from quizapp.llm_service import confirm_test_parameters, generate_confirmed_test
 
@@ -351,15 +352,23 @@ def create_test_manual_view(request):
 
 @login_required
 def test_list_view(request):
-    """List teacher's tests"""
+    """List teacher's tests (both regular and group tests)"""
     if request.user.role != 'teacher':
         return redirect('webapp:dashboard')
 
+    # Regular tests
     tests = Test.objects.filter(teacher=request.user).annotate(
         question_count=Count('questions')
     ).order_by('-created_at')
 
-    return render(request, 'teacher/test_list.html', {'tests': tests})
+    # Group tests
+    group_tests = GroupTest.objects.filter(teacher=request.user).select_related('test').order_by('group_number')
+
+    context = {
+        'tests': tests,
+        'group_tests': group_tests,
+    }
+    return render(request, 'teacher/test_list.html', context)
 
 
 @login_required
@@ -901,3 +910,420 @@ def delete_test_view(request, test_id):
 
     # If GET request (shouldn't happen), redirect to dashboard
     return redirect('webapp:dashboard')
+
+
+# ============================================
+# GROUP TEST VIEWS (ADD BEFORE THE LAST LINE)
+# ============================================
+
+from quizapp.models import GroupTest, GroupAttempt, GroupMember, IndividualOpinion, GroupAnswer
+from .forms import GroupTestCreationForm
+
+
+@login_required
+def create_group_test_view(request):
+    """Create a group test with open-ended discussion questions"""
+    if request.user.role != 'teacher':
+        messages.error(request, 'Only teachers can create group tests.')
+        return redirect('webapp:dashboard')
+
+    if request.method == 'POST':
+        form = CreateGroupTestDirectForm(data=request.POST)
+        if form.is_valid():
+            try:
+                # Extract data
+                group_number = int(form.cleaned_data['group_number'])
+                title = form.cleaned_data['title']
+                qa_text = form.cleaned_data['questions_and_answers']
+                timer_minutes = form.cleaned_data['timer_minutes']
+                max_group_size = form.cleaned_data['max_group_size']
+
+                # Check if group exists
+                existing = GroupTest.objects.filter(
+                    teacher=request.user,
+                    group_number=group_number
+                ).first()
+
+                if existing:
+                    messages.error(request,
+                                   f'Group-{group_number} already exists! Delete it first or choose another number.')
+                    return render(request, 'teacher/create_group_test_simple.html', {'form': form})
+
+                # Parse Q&A format
+                from webapp.utils import parse_group_test_qa
+
+                questions, error = parse_group_test_qa(qa_text)
+
+                if error:
+                    messages.error(request, f'Parse error: {error}')
+                    return render(request, 'teacher/create_group_test_simple.html', {'form': form})
+
+                # Create Test
+                test = Test.objects.create(
+                    teacher=request.user,
+                    title=title,
+                    description=f"Group discussion test with {len(questions)} open-ended questions",
+                    creation_method='manual',
+                    topic=title,
+                    difficulty='intermediate',
+                    teacher_prompt=f"Group test: {len(questions)} discussion questions"
+                )
+
+                # Create Questions (store expected answer in options[0])
+                for q in questions:
+                    Question.objects.create(
+                        test=test,
+                        question_text=q['question_text'],
+                        question_type='text',  # Mark as text-based
+                        options=[q['expected_answer']],  # Store expected answer
+                        correct_option=0,  # Always 0 for text questions
+                        points=10,  # Higher points for discussion questions
+                        order=q['number'] - 1
+                    )
+
+                # Create GroupTest
+                group_test = GroupTest.objects.create(
+                    group_number=group_number,
+                    test=test,
+                    teacher=request.user,
+                    timer_minutes=timer_minutes,
+                    max_group_size=max_group_size
+                )
+
+                messages.success(request, f'Group-{group_number} created with {len(questions)} discussion questions!')
+                return redirect('webapp:group_test_detail', group_test_id=group_test.id)
+
+            except Exception as e:
+                import traceback
+                traceback.print_exc()
+                messages.error(request, f'Error: {str(e)}')
+                return render(request, 'teacher/create_group_test_simple.html', {'form': form})
+    else:
+        form = CreateGroupTestDirectForm()
+
+    return render(request, 'teacher/create_group_test_simple.html', {'form': form})
+
+
+@login_required
+def group_test_detail_view(request, group_test_id):
+    """View group test details (teacher only)"""
+    group_test = get_object_or_404(GroupTest, id=group_test_id, teacher=request.user)
+
+    # Get attempts for this group test
+    attempts = GroupAttempt.objects.filter(
+        group_test=group_test,
+        is_completed=True
+    ).prefetch_related('members', 'answers', 'opinions')
+
+    context = {
+        'group_test': group_test,
+        'attempts': attempts,
+    }
+    return render(request, 'teacher/group_test_detail.html', context)
+
+
+@login_required
+def delete_group_test_view(request, group_test_id):
+    """Delete a group test (teacher only)"""
+    if request.user.role != 'teacher':
+        messages.error(request, 'Only teachers can delete group tests.')
+        return redirect('webapp:dashboard')
+
+    group_test = get_object_or_404(GroupTest, id=group_test_id, teacher=request.user)
+
+    if request.method == 'POST':
+        group_number = group_test.group_number
+        group_test.delete()
+        messages.success(request, f'Group-{group_number} has been deleted successfully.')
+        return redirect('webapp:test_list')
+
+    return redirect('webapp:test_list')
+
+
+@login_required
+def group_test_results_view(request, group_test_id):
+    """View results for a group test (teacher only)"""
+    group_test = get_object_or_404(GroupTest, id=group_test_id, teacher=request.user)
+
+    # Get all completed attempts
+    attempts = GroupAttempt.objects.filter(
+        group_test=group_test,
+        is_completed=True
+    ).prefetch_related('members', 'answers')
+
+    # Prepare results data
+    results_data = []
+    for attempt in attempts:
+        members_data = []
+        for member in attempt.members.all():
+            members_data.append({
+                'name': member.student.get_full_name(),
+                'email': member.student.email,
+                'individual_score': round(member.individual_score_percentage, 1),
+            })
+
+        results_data.append({
+            'id': attempt.id,
+            'date': attempt.finished_at,
+            'group_score': round(attempt.group_score_percentage, 1),
+            'members': members_data,
+            'time_taken': attempt.time_taken_seconds,
+        })
+
+    context = {
+        'group_test': group_test,
+        'results': results_data,
+    }
+    return render(request, 'teacher/group_test_results.html', context)
+
+
+# ============================================
+# STUDENT - GROUP TEST TAKING
+# ============================================
+
+def take_group_test_view(request, token):
+    """
+    Group test flow:
+    1. Join waiting room
+    2. Start test
+    3. Take test
+    4. See results
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+
+    logger.info(f"Group test accessed with token: {token}")
+
+    # Get group test
+    try:
+        group_test = GroupTest.objects.get(access_token=token, is_active=True)
+        logger.info(f"Found group test: {group_test}")
+    except GroupTest.DoesNotExist:
+        messages.error(request, 'Group test not found or inactive.')
+        return redirect('webapp:landing')
+
+    # Check authentication
+    if not request.user.is_authenticated:
+        request.session['test_redirect'] = request.path
+        messages.info(request, 'Please login to join the group test.')
+        return redirect('webapp:login')
+
+    # Get or create current attempt (only one active attempt at a time)
+    current_attempt = GroupAttempt.objects.filter(
+        group_test=group_test,
+        is_completed=False
+    ).first()
+
+    if not current_attempt:
+        # Create new attempt
+        total_points = sum(q.points for q in group_test.test.questions.all())
+        current_attempt = GroupAttempt.objects.create(
+            group_test=group_test,
+            total_possible=total_points
+        )
+        logger.info(f"Created new attempt: {current_attempt.id}")
+
+    # Check if student already joined
+    member, created = GroupMember.objects.get_or_create(
+        group_attempt=current_attempt,
+        student=request.user
+    )
+
+    if created:
+        logger.info(f"Student joined: {request.user.get_full_name()}")
+
+    # Check group size limit
+    current_size = current_attempt.members.count()
+    if created and current_size > group_test.max_group_size:
+        member.delete()
+        messages.error(request, f'Group is full! Maximum {group_test.max_group_size} students allowed.')
+        return redirect('webapp:dashboard')
+
+    # Get all members
+    all_members = current_attempt.members.select_related('student').all()
+
+    # ============================================
+    # HANDLE POST REQUESTS
+    # ============================================
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        logger.info(f"POST action: {action}")
+
+        # START TEST
+        if action == 'start_test' and not current_attempt.is_started:
+            current_attempt.is_started = True
+            current_attempt.started_at = timezone.now()
+            current_attempt.save()
+            logger.info("Test started!")
+            messages.success(request, 'Test started! Good luck!')
+            return redirect('webapp:take_group_test', token=token)
+
+        # SUBMIT OPINION
+        elif action == 'submit_opinion':
+            question_id = request.POST.get('question_id')
+            opinion_text = request.POST.get('opinion_text', '').strip()
+
+            if question_id and opinion_text:
+                question = get_object_or_404(Question, id=question_id, test=group_test.test)
+
+                # Save or update opinion
+                opinion, created = IndividualOpinion.objects.update_or_create(
+                    group_attempt=current_attempt,
+                    question=question,
+                    student=request.user,
+                    defaults={'opinion_text': opinion_text}
+                )
+
+                # Check if all opinions submitted
+                total_questions = group_test.test.questions.count()
+                user_opinions = IndividualOpinion.objects.filter(
+                    group_attempt=current_attempt,
+                    student=request.user
+                ).count()
+
+                if user_opinions == total_questions:
+                    member.has_submitted_all_opinions = True
+                    member.save()
+
+                messages.success(request, 'Opinion saved!')
+                return redirect('webapp:take_group_test', token=token)
+
+        # SUBMIT GROUP ANSWER
+        elif action == 'submit_group_answer':
+            question_id = request.POST.get('question_id')
+            text_answer = request.POST.get('text_answer', '').strip()
+
+            if question_id and text_answer:
+                question = get_object_or_404(Question, id=question_id, test=group_test.test)
+
+                # Check if already answered
+                existing = GroupAnswer.objects.filter(
+                    group_attempt=current_attempt,
+                    question=question
+                ).first()
+
+                if existing:
+                    messages.warning(request, 'This question has already been answered by your group!')
+                else:
+                    # Save group answer (TEXT-BASED)
+                    group_answer = GroupAnswer.objects.create(
+                        group_attempt=current_attempt,
+                        question=question,
+                        selected_option=0,  # Not used for text
+                        submitted_by=request.user
+                    )
+                    # Store text answer
+                    group_answer.text_answer = text_answer
+                    group_answer.save()
+
+                    messages.success(request, 'Group answer submitted!')
+
+                return redirect('webapp:take_group_test', token=token)
+
+        # FINISH TEST
+        elif action == 'finish_test':
+            logger.info("Finishing test and grading...")
+
+            # Grade everything
+            from quizapp.llm_service import grade_group_test
+            grade_group_test(current_attempt)
+
+            current_attempt.is_completed = True
+            current_attempt.finished_at = timezone.now()
+
+            # Calculate time taken
+            if current_attempt.started_at:
+                time_taken = (current_attempt.finished_at - current_attempt.started_at).total_seconds()
+                current_attempt.time_taken_seconds = int(time_taken)
+
+            current_attempt.save()
+
+            messages.success(request, 'Test completed! View your results below.')
+            return redirect('webapp:take_group_test', token=token)
+
+    # ============================================
+    # HANDLE GET REQUESTS (SHOW PAGES)
+    # ============================================
+    questions = group_test.test.questions.all().order_by('order')
+
+    # STATE 1: WAITING ROOM (not started yet)
+    if not current_attempt.is_started:
+        logger.info("Showing waiting room")
+        context = {
+            'group_test': group_test,
+            'attempt': current_attempt,
+            'members': all_members,
+            'current_size': current_size,
+        }
+        return render(request, 'student/group_test_waiting.html', context)
+
+    # STATE 2: TAKING TEST (started but not completed)
+    elif not current_attempt.is_completed:
+        logger.info("Showing test page")
+
+        # Get user's opinions
+        user_opinions = {}
+        for opinion in IndividualOpinion.objects.filter(
+                group_attempt=current_attempt,
+                student=request.user
+        ).select_related('question'):
+            user_opinions[opinion.question.id] = opinion.opinion_text
+
+        # Get group answers
+        group_answers = {}
+        for answer in GroupAnswer.objects.filter(
+                group_attempt=current_attempt
+        ).select_related('question', 'submitted_by'):
+            group_answers[answer.question.id] = {
+                'text': answer.text_answer,
+                'submitted_by': answer.submitted_by.get_full_name()
+            }
+
+        # Calculate timer
+        time_remaining = None
+        if current_attempt.started_at and group_test.timer_minutes:
+            elapsed = (timezone.now() - current_attempt.started_at).total_seconds()
+            total_seconds = group_test.timer_minutes * 60
+            time_remaining = max(0, int(total_seconds - elapsed))
+
+        context = {
+            'group_test': group_test,
+            'attempt': current_attempt,
+            'members': all_members,
+            'questions': questions,
+            'user_opinions': user_opinions,
+            'group_answers': group_answers,
+            'time_remaining': time_remaining,
+        }
+        return render(request, 'student/take_group_test.html', context)
+
+    # STATE 3: RESULTS (completed)
+    else:
+        logger.info("Showing results page")
+
+        # Get member's scores
+        member = GroupMember.objects.get(
+            group_attempt=current_attempt,
+            student=request.user
+        )
+
+        # Get all members' scores
+        all_scores = []
+        for m in all_members:
+            all_scores.append({
+                'name': m.student.get_full_name(),
+                'individual_score': round(m.individual_score_percentage, 1),
+                'is_you': m.student == request.user
+            })
+
+        # Sort by score
+        all_scores.sort(key=lambda x: x['individual_score'], reverse=True)
+
+        context = {
+            'group_test': group_test,
+            'attempt': current_attempt,
+            'member': member,
+            'all_scores': all_scores,
+            'group_score': round(current_attempt.group_score_percentage, 1),
+        }
+        return render(request, 'student/group_test_results.html', context)
