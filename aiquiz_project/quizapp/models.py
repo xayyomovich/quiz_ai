@@ -389,8 +389,10 @@ class GroupAnswer(models.Model):
     group_attempt = models.ForeignKey(GroupAttempt, on_delete=models.CASCADE, related_name='answers')
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
 
-    # Answer
-    selected_option = models.IntegerField(help_text="Group's selected option index")
+    # Answer - supports BOTH multiple choice AND text
+    selected_option = models.IntegerField(default=0, help_text="For MCQ: Group's selected option index")
+    text_answer = models.TextField(blank=True, null=True, help_text="For open-ended: Group's text answer")
+
     submitted_by = models.ForeignKey(User, on_delete=models.CASCADE, help_text="Who clicked submit")
 
     # Grading
@@ -408,10 +410,17 @@ class GroupAnswer(models.Model):
 
     def auto_grade(self):
         """Grade the group answer"""
-        if self.selected_option == self.question.correct_option:
-            self.is_correct = True
-            self.points_earned = self.question.points
+        if self.question.question_type in ['mcq', 'truefalse']:
+            # Multiple choice grading
+            if self.selected_option == self.question.correct_option:
+                self.is_correct = True
+                self.points_earned = self.question.points
+            else:
+                self.is_correct = False
+                self.points_earned = 0
         else:
-            self.is_correct = False
+            # Text-based: AI will grade this later
             self.points_earned = 0
+            self.is_correct = False
+
         self.save()
