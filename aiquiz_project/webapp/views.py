@@ -396,6 +396,11 @@ def publish_test_view(request, test_id):
     """Publish test - simplified version"""
     test = get_object_or_404(Test, id=test_id, teacher=request.user)
 
+    # ADD THIS CHECK - Prevent publishing if test is already used in a group test
+    if GroupTest.objects.filter(test=test).exists():
+        messages.error(request, 'This test is already used in a group test! Cannot publish separately.')
+        return redirect('webapp:test_detail', test_id=test.id)
+
     # Check if already published
     existing_assignment = Assignment.objects.filter(test=test).first()
 

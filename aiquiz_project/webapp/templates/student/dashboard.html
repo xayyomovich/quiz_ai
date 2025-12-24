@@ -224,23 +224,36 @@
     <div class="modal-box">
         <h3 class="font-bold text-2xl mb-4">
             <i class="fas fa-link text-primary"></i>
-            Enter Test Link
+            Enter Test Link or Code
         </h3>
 
-        <p class="mb-4">Paste the test link or access code from your teacher:</p>
+        <p class="mb-4">Paste the full test link from your teacher:</p>
 
-        <form method="get" action="{% url 'webapp:landing' %}" id="testLinkForm">
+        <form method="get" id="testLinkForm">
             <div class="form-control mb-4">
                 <label class="label">
-                    <span class="label-text font-semibold">Test Link or Code</span>
+                    <span class="label-text font-semibold">Test Link</span>
                 </label>
                 <input
                     type="text"
                     id="testLinkInput"
-                    placeholder="http://cld.com.uz/test/abc123 or abc123"
+                    placeholder="http://site.com/test/abc123 or http://site.com/group-test/abc123"
                     class="input input-bordered w-full"
                     required
                 />
+                <label class="label">
+                    <span class="label-text-alt">
+                        <i class="fas fa-info-circle"></i>
+                        Works with both regular tests and group tests!
+                    </span>
+                </label>
+            </div>
+
+            <div class="alert alert-info text-sm mb-4">
+                <i class="fas fa-lightbulb"></i>
+                <div>
+                    <strong>Tip:</strong> Just paste the entire link your teacher shared!
+                </div>
             </div>
 
             <div class="modal-action">
@@ -263,26 +276,123 @@
 function goToTest() {
     const input = document.getElementById('testLinkInput').value.trim();
 
-    // Extract token from full URL or use as-is if just token
-    let token = input;
-    if (input.includes('/test/')) {
-        token = input.split('/test/')[1].split('/')[0].split('?')[0];
+    if (!input) {
+        alert('Please enter a test link');
+        return;
     }
 
-    if (token) {
-        window.location.href = `/test/${token}/`;
+    // Smart URL detection
+    if (input.includes('http://') || input.includes('https://')) {
+        // Extract path from full URL
+        try {
+            const url = new URL(input);
+            const path = url.pathname; // Gets "/test/abc123/" or "/group-test/abc123/"
+
+            // Clean up trailing slashes
+            const cleanPath = path.endsWith('/') ? path : path + '/';
+
+            // Navigate to the path
+            window.location.href = cleanPath;
+        } catch (e) {
+            alert('Invalid URL format');
+        }
     } else {
-        alert('Please enter a valid test link or code');
+        // Just a token - assume regular test
+        window.location.href = `/test/${input}/`;
     }
 }
 
-// Allow Enter key to submit
-document.getElementById('testLinkInput').addEventListener('keypress', function(e) {
+// Allow Enter key
+document.getElementById('testLinkInput')?.addEventListener('keypress', function(e) {
     if (e.key === 'Enter') {
         e.preventDefault();
         goToTest();
     }
 });
 </script>
+
+<!--&lt;!&ndash; Take Test Modal &ndash;&gt;-->
+<!--<dialog id="takeTestModal" class="modal">-->
+<!--    <div class="modal-box">-->
+<!--        <h3 class="font-bold text-2xl mb-4">-->
+<!--            <i class="fas fa-link text-primary"></i>-->
+<!--            Enter Test Link-->
+<!--        </h3>-->
+
+<!--        <p class="mb-4">Paste the test link or access code from your teacher:</p>-->
+
+<!--        <form method="get" action="{% url 'webapp:landing' %}" id="testLinkForm">-->
+<!--            <div class="form-control mb-4">-->
+<!--                <label class="label">-->
+<!--                    <span class="label-text font-semibold">Test Link or Code</span>-->
+<!--                </label>-->
+<!--                <input-->
+<!--                    type="text"-->
+<!--                    id="testLinkInput"-->
+<!--                    placeholder="http://cld.com.uz/test/abc123 or abc123"-->
+<!--                    class="input input-bordered w-full"-->
+<!--                    required-->
+<!--                />-->
+<!--            </div>-->
+
+<!--            <div class="modal-action">-->
+<!--                <form method="dialog">-->
+<!--                    <button class="btn">Cancel</button>-->
+<!--                </form>-->
+<!--                <button type="button" onclick="goToTest()" class="btn btn-primary">-->
+<!--                    <i class="fas fa-arrow-right mr-2"></i>-->
+<!--                    Go to Test-->
+<!--                </button>-->
+<!--            </div>-->
+<!--        </form>-->
+<!--    </div>-->
+<!--    <form method="dialog" class="modal-backdrop">-->
+<!--        <button>close</button>-->
+<!--    </form>-->
+<!--</dialog>-->
+
+<!--<script>-->
+<!--function goToTest() {-->
+<!--    const input = document.getElementById('testLinkInput').value.trim();-->
+
+<!--    if (!input) {-->
+<!--        alert('Please enter a valid test link or code');-->
+<!--        return;-->
+<!--    }-->
+
+<!--    // Extract token from URL or use as-is if it's just a token-->
+<!--    let token = input;-->
+
+<!--    // If it's a full URL, extract the token-->
+<!--    if (input.includes('http://') || input.includes('https://')) {-->
+<!--        // Extract token from URLs like:-->
+<!--        // http://site.com/test/abc123/-->
+<!--        // http://site.com/group-test/abc123/-->
+
+<!--        // Try to match /test/TOKEN/ or /group-test/TOKEN/-->
+<!--        const testMatch = input.match(/\/test\/([a-z0-9]+)/i);-->
+<!--        const groupMatch = input.match(/\/group-test\/([a-z0-9]+)/i);-->
+
+<!--        if (groupMatch) {-->
+<!--            // It's a group test-->
+<!--            token = groupMatch[1];-->
+<!--            window.location.href = `/group-test/${token}/`;-->
+<!--            return;-->
+<!--        } else if (testMatch) {-->
+<!--            // It's a regular test-->
+<!--            token = testMatch[1];-->
+<!--            window.location.href = `/test/${token}/`;-->
+<!--            return;-->
+<!--        } else {-->
+<!--            alert('Invalid test link format');-->
+<!--            return;-->
+<!--        }-->
+<!--    } else {-->
+<!--        // It's just a token, assume it's a regular test-->
+<!--        // User should specify if it's a group test-->
+<!--        window.location.href = `/test/${token}/`;-->
+<!--    }-->
+<!--}-->
+<!--</script>-->
 
 {% endblock %}
